@@ -1,5 +1,6 @@
 PegVM - a virtual machine interpreter for peg4d
 ====
+[![Build Status](https://secure.travis-ci.org/shun-honda/simplevm.png)](http://travis-ci.org/shun-honda/simplevm)
 ## Description
 PegVM is ...
 
