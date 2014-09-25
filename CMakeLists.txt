@@ -96,6 +96,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake
 add_executable(pegvm ${PEGVM_SOURCE})
 target_link_libraries(pegvm ${HAVE_LIBGC})
 
+enable_testing()
+
 install(TARGETS pegvm pegvm
 		RUNTIME DESTINATION bin
 		)
