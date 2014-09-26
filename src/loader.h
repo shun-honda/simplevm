@@ -8,7 +8,7 @@
 #include "parsing_source.h"
 #include "opcode.h"
 #include "stringbuilder.h"
-#include "parsing_sorce.h"
+#include "parsing_source.h"
 
 char* loadByteCodeFile(char *fileName);
 ParsingSource* loadSource(char *fileName);

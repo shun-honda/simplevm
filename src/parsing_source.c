@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include "simplevm_parsingcontext.h"
-#include "parsing_sorce.h"
+#include "parsing_source.h"
 
 char* get_text(ParsingSource source, int length) {
     char text[length];

@@ -3,7 +3,7 @@
 //  pegVM
 //
 
-#include "parsing_sorce.h"
+#include "parsing_source.h"
 #include "opcode.h"
 
 #ifndef pegVM_simplevm_parsingcontext_h

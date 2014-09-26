@@ -7,7 +7,7 @@
 #include <string.h>
 #include "simplevm_parsingcontext.h"
 #include "opcode.h"
-#include "parsing_sorce.h"
+#include "parsing_source.h"
 
 ParsingObject createParsingObject(SimpleVmParsingContext *c) {
     ParsingObject left;
