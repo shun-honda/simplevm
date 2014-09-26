@@ -1,11 +1,18 @@
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <string.h>
+//#include "loader.h"
 
 //int loadByteCodeFile(char *fileName) {
 //    FILE *file;
 //    unsigned char buf[8192];
 //    Opcode opList[1024];
 //    int i, size, pos = 0, code_size = 0, ndata = 0;
-//    char *bdata;
+//    char bdata[256];
 //
+//    for (int j = 0; j < 256; j++) {
+//        bdata[j] = NULL;
+//    }
 //
 //    file = fopen(fileName, "rb");
 //    if(file == NULL) {
@@ -18,12 +25,24 @@
 //    for (i = 0; i < size; i++) {
 //        if(pos > 4 && (int)buf[i] == 0) {
 //            opList[code_size].bdata = bdata;
-//            printf("%s", opList[code_size].bdata);
+//            if (opList[code_size].opcode == 9) {
+//                printf("[%s]", opList[code_size].bdata);
+//            }
+//            else if(opList[code_size].opcode == 7) {
+//                printf("\'%s\'", opList[code_size].bdata);
+//            }
+//            else if(opList[code_size].bdata != NULL) {
+//                printf("%s", opList[code_size].bdata);
+//            }
 //            printf("\n");
 //            code_size++;
 //            if((int)buf[i+1] == 128) {
 //                break;
 //            }
+//            for (int j = 5; j < pos; j++) {
+//                bdata[j-5] = NULL;
+//            }
+//            ndata = 0;
 //            pos = 0;
 //        }
 //        else if(pos == 0){
@@ -53,4 +72,24 @@
 //    return 0;
 //
 //}
-//
+
+//ParsingSource* loadSource(char* fileName) {
+//    ParsingSource *source = malloc(sizeof(ParsingSource));
+//    StringBuilder *sb = malloc(sizeof(StringBuilder));
+//    sb_create(sb);
+//    FILE *fp;
+//    char *filename = "json_test.json";
+//    char *readline = malloc(sizeof(char)*256);
+//    
+//    if ((fp = fopen(filename, "r")) == NULL) {
+//        printf("error: file not found (%s)\n", fileName);
+//        exit(0);
+//    }
+//    
+//    while ( fgets(readline, 256, fp) != NULL ) {
+//        sb_append(sb, readline);
+//    }
+//    source->sourceText = sb->str;
+//    printf("%s\n", sb->str);
+//    return source;
+//}
