@@ -4,8 +4,8 @@
 
 // #include "pegvm_inst.h"
 #include "input_source.h"
-typedef void PegVMInstruction;
 #ifndef LOADER_H
 #define LOADER_H
+typedef void PegVMInstruction;
 PegVMInstruction *ByteCodeLoader_Load(InputSource *input);
 #endif

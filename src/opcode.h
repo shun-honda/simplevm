@@ -35,6 +35,7 @@ enum vm_opcode {
     opIndent,
     ERROR = -1
 };
+
 typedef struct {
     int opcode;
     union {

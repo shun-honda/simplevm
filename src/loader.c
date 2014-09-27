@@ -1,10 +1,66 @@
 #include "loader.h"
+#include "pegvm.h"
+#include <assert.h>
 //#include <stdio.h>
 //#include <stdlib.h>
 //#include <string.h>
 
+static const char *get_opname(uint8_t opcode)
+{
+    switch (opcode) {
+#define OP_CASE(OP) case PEGVM_OP_##OP : return "" #OP;
+        OP_CASE(EXIT);
+        OP_CASE(JUMP);
+        OP_CASE(CALL);
+        OP_CASE(RET);
+        OP_CASE(IFSUCC);
+        OP_CASE(IFFAIL);
+        OP_CASE(MatchText);
+        OP_CASE(MatchCharset);
+        OP_CASE(MatchAnyChar);
+        OP_CASE(RememberPosition);
+        OP_CASE(CommitPosition);
+        OP_CASE(BacktrackPosition);
+        OP_CASE(RememberFailurePosition);
+        OP_CASE(UpdateFailurePosition);
+        OP_CASE(ForgetFailurePosition);
+        OP_CASE(RememberSequencePosition);
+        OP_CASE(CommitSequencePosition);
+        OP_CASE(BackTrackSequencePosition);
+        OP_CASE(StoreObject);
+        OP_CASE(DropStoredObject);
+        OP_CASE(RestoreObject);
+        OP_CASE(RestoreNegativeObject);
+        OP_CASE(ConnectObject);
+        OP_CASE(NewObject);
+        OP_CASE(CommitObject);
+        OP_CASE(Tagging);
+        OP_CASE(Indent);
+        default:
+        assert(0 && "UNREACHABLE");
+        break;
+#undef OP_CASE
+    }
+    return "";
+}
+
 PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
 {
+    size_t i;
+    for (i = 0; i < input->length; i++) {
+        uint8_t opcode = InputSource_GetUint8(input);
+        uint32_t ndata = InputSource_GetUint32(input);
+        uint8_t bdata = 0;
+        if (opcode == 128) {
+            break;
+        }
+        fprintf(stderr, "op=%s ndata=%x\n", get_opname(opcode), ndata);
+        fprintf(stderr, "bdata=");
+        while ((bdata = InputSource_GetUint8(input)) != 0) {
+            fprintf(stderr, "%c", bdata);
+        }
+        fprintf(stderr, "\n");
+    }
     return NULL;
 }
 
