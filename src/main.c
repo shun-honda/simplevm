@@ -45,7 +45,7 @@ int main(int argc, char * const argv[])
         pegvm_usage(orig_argv0);
     }
     ParserContext_Init(&context);
-    if (!ParserContext_LoadSyntax(&context, argv[0])) {
+    if (!ParserContext_LoadSyntax(&context, syntax_file)) {
         pegvm_error("invalid bytecode");
     }
     if (!ParserContext_ParseFiles(&context, argc, argv)) {
