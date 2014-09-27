@@ -1,4 +1,5 @@
 #include "input_source.h"
+#include "loader.h"
 
 #ifndef PEGVM_H
 #define PEGVM_H
@@ -6,6 +7,7 @@
 
 typedef struct ParserContext {
     InputSource *current_source;
+    PegVMInstruction *instructions;
     char last_error[PARSER_CONTEXT_MAX_ERROR_LENGTH];
 } ParserContext;
 

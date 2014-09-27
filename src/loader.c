@@ -1,7 +1,12 @@
+#include "loader.h"
 //#include <stdio.h>
 //#include <stdlib.h>
 //#include <string.h>
-//#include "loader.h"
+
+PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
+{
+    return NULL;
+}
 
 //int loadByteCodeFile(char *fileName) {
 //    FILE *file;
@@ -80,12 +85,12 @@
 //    FILE *fp;
 //    char *filename = "json_test.json";
 //    char *readline = malloc(sizeof(char)*256);
-//    
+//
 //    if ((fp = fopen(filename, "r")) == NULL) {
 //        printf("error: file not found (%s)\n", fileName);
 //        exit(0);
 //    }
-//    
+//
 //    while ( fgets(readline, 256, fp) != NULL ) {
 //        sb_append(sb, readline);
 //    }

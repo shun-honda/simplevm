@@ -34,6 +34,7 @@ int ParserContext_LoadSyntax(ParserContext *context, const char *file)
     if (InputSource_Init(&is, file) == NULL) {
         return 1;
     }
+    context->instructions = ByteCodeLoader_Load(&is);
     InputSource_Dispose(&is);
     return 0;
 }

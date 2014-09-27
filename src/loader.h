@@ -2,15 +2,10 @@
 //  loader.h
 //
 
-#ifndef _loader_h
-#define _loader_h
-
-#include "parsing_source.h"
-#include "opcode.h"
-#include "stringbuilder.h"
-#include "parsing_source.h"
-
-char* loadByteCodeFile(char *fileName);
-ParsingSource* loadSource(char *fileName);
-
+// #include "pegvm_inst.h"
+#include "input_source.h"
+typedef void PegVMInstruction;
+#ifndef LOADER_H
+#define LOADER_H
+PegVMInstruction *ByteCodeLoader_Load(InputSource *input);
 #endif
