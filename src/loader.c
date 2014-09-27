@@ -49,8 +49,12 @@ PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
     size_t i;
     for (i = 0; i < input->length; i++) {
         uint8_t opcode = InputSource_GetUint8(input);
-        uint32_t ndata = InputSource_GetUint32(input);
         uint8_t bdata = 0;
+        uint32_t ndata = 0;
+        ndata = InputSource_GetUint8(input);
+        ndata = (ndata) | (InputSource_GetUint8(input) << 8);
+        ndata = (ndata) | (InputSource_GetUint8(input) << 16);
+        ndata = (ndata) | (InputSource_GetUint8(input) << 24);
         if (opcode == 128) {
             break;
         }
