@@ -6,15 +6,48 @@
 #include <unistd.h>
 #include <string.h>
 #include <gc/gc.h>
+#include <stdlib.h>
+#include "pegvm.h"
 
-// int loadByteCodeFile(const char *fileName);
-
-int main(int argc, const char * argv[])
+static void pegvm_usage(const char *file)
 {
-    //ParserContext context;
-    //ParserContext_Init(&context);
-    //loadByteCodeFile(argv[0]);
-    //ParserContext_Destruct(&context);
-    return 0;
+    fprintf(stderr, "Usage: %s -f peg_bytecode target_file\n", file);
+    exit(EXIT_FAILURE);
 }
 
+static void pegvm_error(const char *errmsg)
+{
+    fprintf(stderr, "%s\n", errmsg);
+    exit(EXIT_FAILURE);
+}
+
+int main(int argc, char * const argv[])
+{
+    ParserContext context;
+    const char *syntax_file = NULL;
+    const char *orig_argv0 = argv[0];
+    int opt;
+    while ((opt = getopt(argc, argv, "f:")) != -1) {
+        switch (opt) {
+        case 'f':
+            syntax_file = optarg;
+            break;
+        default: /* '?' */
+            pegvm_usage(orig_argv0);
+        }
+    }
+    if (syntax_file == NULL) {
+        pegvm_usage(orig_argv0);
+    }
+    argc -= optind;
+    argv += optind;
+    if (argc == 0) {
+        pegvm_usage(orig_argv0);
+    }
+    ParserContext_Init(&context);
+    if (!ParserContext_LoadSyntax(&context, argv[0])) {
+        pegvm_error("invalid bytecode");
+    }
+    ParserContext_Destruct(&context);
+    return 0;
+}

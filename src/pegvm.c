@@ -6,8 +6,26 @@
 // #include <stdio.h>
 // #include <stdbool.h>
 // #include "opcode.h"
-// #include "simplevm_parsingcontext.h"
-//
+#include "pegvm.h"
+
+void ParserContext_Init(ParserContext *context)
+{
+}
+
+void ParserContext_Destruct(ParserContext *context)
+{
+}
+
+int ParserContext_LoadSyntax(ParserContext *context, const char *file)
+{
+    return 0;
+}
+
+int ParserContext_Execute(ParserContext *context, const char *input)
+{
+    return 0;
+}
+
 // static void run(SimpleVmParsingContext *c, int pc, Opcode** code) {
 //     bool exit = false;
 //     while(exit == false) {
