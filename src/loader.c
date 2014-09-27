@@ -1,41 +1,13 @@
 #include "loader.h"
 #include "pegvm.h"
+#include "karray.h"
 #include <assert.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
 
 static const char *get_opname(uint8_t opcode)
 {
     switch (opcode) {
 #define OP_CASE(OP) case PEGVM_OP_##OP : return "" #OP;
-        OP_CASE(EXIT);
-        OP_CASE(JUMP);
-        OP_CASE(CALL);
-        OP_CASE(RET);
-        OP_CASE(IFSUCC);
-        OP_CASE(IFFAIL);
-        OP_CASE(MatchText);
-        OP_CASE(MatchCharset);
-        OP_CASE(MatchAnyChar);
-        OP_CASE(RememberPosition);
-        OP_CASE(CommitPosition);
-        OP_CASE(BacktrackPosition);
-        OP_CASE(RememberFailurePosition);
-        OP_CASE(UpdateFailurePosition);
-        OP_CASE(ForgetFailurePosition);
-        OP_CASE(RememberSequencePosition);
-        OP_CASE(CommitSequencePosition);
-        OP_CASE(BackTrackSequencePosition);
-        OP_CASE(StoreObject);
-        OP_CASE(DropStoredObject);
-        OP_CASE(RestoreObject);
-        OP_CASE(RestoreNegativeObject);
-        OP_CASE(ConnectObject);
-        OP_CASE(NewObject);
-        OP_CASE(CommitObject);
-        OP_CASE(Tagging);
-        OP_CASE(Indent);
+        PEGVM_OP_EACH(OP_CASE);
         default:
         assert(0 && "UNREACHABLE");
         break;
@@ -44,13 +16,253 @@ static const char *get_opname(uint8_t opcode)
     return "";
 }
 
+typedef struct Instruction {
+    long opcode;
+    union {
+        unsigned long ndata;
+        uint8_t *bdata;
+        struct Instruction *dst;
+    };
+} Instruction;
+
+static Instruction *Emit_EXIT(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    self->ndata = 0;
+    return self;
+}
+static Instruction *Emit_JUMP(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_CALL(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_RET(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_IFSUCC(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_IFFAIL(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_NOP(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_Failure(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_MatchText(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_MatchByteChar(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_MatchCharset(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_MatchAnyChar(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_MatchTextNot(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_MatchByteCharNot(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_MatchCharsetNot(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_MatchOptionalText(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_MatchOptionalByteChar(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_MatchOptionalCharset(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_RememberPosition(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_CommitPosition(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_BacktrackPosition(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_RememberSequencePosition(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_CommitSequencePosition(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_BackTrackSequencePosition(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_RememberFailurePosition(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_UpdateFailurePosition(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_ForgetFailurePosition(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_StoreObject(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_DropStoredObject(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_RestoreObject(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_RestoreObjectIfFailure(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_RestoreNegativeObject(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_ConnectObject(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_DisableTransCapture(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_EnableTransCapture(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_NewObject(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_LeftJoinObject(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_CommitObject(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_RefreshStoredObject(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_Tagging(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_Value(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+static Instruction *Emit_Indent(Instruction *self, uint32_t ndata, uint8_t *bdata)
+{
+    assert(0 && "Not Implemented");
+    return self;
+}
+
+typedef Instruction *(*inst_load_t)(Instruction *self, uint32_t ndata, uint8_t *bdata);
+static inst_load_t f_inst[] = {
+#define DEFINE_LOAD_F(OP) Emit_##OP,
+    PEGVM_OP_EACH(DEFINE_LOAD_F)
+#undef DEFINE_LOAD_F
+};
+
+DEF_ARRAY_STRUCT(uint8_t);
+DEF_ARRAY_T(uint8_t);
+DEF_ARRAY_OP_NOPOINTER(uint8_t);
+DEF_ARRAY_STRUCT(Instruction);
+DEF_ARRAY_T_OP(Instruction);
+
 PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
 {
     size_t i;
+    int idx = 0;
+    Instruction inst, *instp;
+    ARRAY(uint8_t) buf;
+    ARRAY(Instruction) insts;
+    ARRAY_init(uint8_t, &buf, 1);
+    ARRAY_init(Instruction, &insts, 1);
+
     for (i = 0; i < input->length; i++) {
         uint8_t opcode = InputSource_GetUint8(input);
         uint8_t bdata = 0;
-        uint32_t ndata = 0;
+        uint32_t ndata;
         ndata = InputSource_GetUint8(input);
         ndata = (ndata) | (InputSource_GetUint8(input) << 8);
         ndata = (ndata) | (InputSource_GetUint8(input) << 16);
@@ -58,103 +270,18 @@ PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
         if (opcode == 128) {
             break;
         }
-        fprintf(stderr, "op=%s ndata=%x\n", get_opname(opcode), ndata);
-        fprintf(stderr, "bdata=");
+        ARRAY_clear(buf);
         while ((bdata = InputSource_GetUint8(input)) != 0) {
-            fprintf(stderr, "%c", bdata);
+            ARRAY_add(uint8_t, &buf, bdata);
         }
-        fprintf(stderr, "\n");
+        fprintf(stderr, "[%04d] op=%-28s ndata=%08d ", idx, get_opname(opcode), ndata);
+        fprintf(stderr, "bdata=%s", (char *)ARRAY_list(buf));
+        inst.opcode = opcode;
+        instp = f_inst[opcode](&inst, ndata, NULL);
+        ARRAY_add(Instruction, &insts, instp);
+        idx++;
     }
+    ARRAY_dispose(uint8_t, &buf);
+    ARRAY_dispose(Instruction, &insts);
     return NULL;
 }
-
-//int loadByteCodeFile(char *fileName) {
-//    FILE *file;
-//    unsigned char buf[8192];
-//    Opcode opList[1024];
-//    int i, size, pos = 0, code_size = 0, ndata = 0;
-//    char bdata[256];
-//
-//    for (int j = 0; j < 256; j++) {
-//        bdata[j] = NULL;
-//    }
-//
-//    file = fopen(fileName, "rb");
-//    if(file == NULL) {
-//        printf("error: file not found (%s)\n", fileName);
-//        return -1;
-//    }
-//
-//    size = fread(buf, sizeof(unsigned char), 8192, file);
-//
-//    for (i = 0; i < size; i++) {
-//        if(pos > 4 && (int)buf[i] == 0) {
-//            opList[code_size].bdata = bdata;
-//            if (opList[code_size].opcode == 9) {
-//                printf("[%s]", opList[code_size].bdata);
-//            }
-//            else if(opList[code_size].opcode == 7) {
-//                printf("\'%s\'", opList[code_size].bdata);
-//            }
-//            else if(opList[code_size].bdata != NULL) {
-//                printf("%s", opList[code_size].bdata);
-//            }
-//            printf("\n");
-//            code_size++;
-//            if((int)buf[i+1] == 128) {
-//                break;
-//            }
-//            for (int j = 5; j < pos; j++) {
-//                bdata[j-5] = NULL;
-//            }
-//            ndata = 0;
-//            pos = 0;
-//        }
-//        else if(pos == 0){
-//            opList[code_size].opcode = (int)buf[i];
-//            printf("%d ", opList[code_size].opcode);
-//            pos++;
-//        }
-//        else if(pos > 0 && pos < 4) {
-//            ndata += (int)buf[i] << ((pos - 1)*8);
-//            pos++;
-//        }
-//        else if(pos == 4) {
-//            ndata += (int)buf[i] << ((pos - 1)*8);
-//            opList[code_size].ndata = ndata;
-//            printf("%ld ", opList[code_size].ndata);
-//            pos++;
-//        }
-//        else {
-//            bdata[pos-5] = buf[i];
-//            pos++;
-//        }
-//    }
-//
-//    printf("%d\n", code_size);
-//
-//    fclose(file);
-//    return 0;
-//
-//}
-
-//ParsingSource* loadSource(char* fileName) {
-//    ParsingSource *source = malloc(sizeof(ParsingSource));
-//    StringBuilder *sb = malloc(sizeof(StringBuilder));
-//    sb_create(sb);
-//    FILE *fp;
-//    char *filename = "json_test.json";
-//    char *readline = malloc(sizeof(char)*256);
-//
-//    if ((fp = fopen(filename, "r")) == NULL) {
-//        printf("error: file not found (%s)\n", fileName);
-//        exit(0);
-//    }
-//
-//    while ( fgets(readline, 256, fp) != NULL ) {
-//        sb_append(sb, readline);
-//    }
-//    source->sourceText = sb->str;
-//    printf("%s\n", sb->str);
-//    return source;
-//}
