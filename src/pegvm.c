@@ -3,25 +3,64 @@
 //  pegVM
 //
 
-// #include <stdio.h>
-// #include <stdbool.h>
-// #include "opcode.h"
 #include "pegvm.h"
+#include "input_source.h"
+#include <string.h>
+#include <stdarg.h>
+
+static void ParserContext_SetError(ParserContext *context, const char *fmt, ...)
+    __attribute__((format(printf, 2, 3)));
 
 void ParserContext_Init(ParserContext *context)
 {
+    memset(context, 0, sizeof(*context));
 }
 
 void ParserContext_Destruct(ParserContext *context)
 {
 }
 
+static void ParserContext_SetError(ParserContext *context, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(context->last_error, PARSER_CONTEXT_MAX_ERROR_LENGTH, fmt, ap);
+    va_end(ap);
+}
+
 int ParserContext_LoadSyntax(ParserContext *context, const char *file)
 {
+    InputSource is;
+    if (InputSource_Init(&is, file) == NULL) {
+        return 1;
+    }
+    context->instructions = ByteCodeLoader_Load(&is);
+    InputSource_Dispose(&is);
     return 0;
 }
 
-int ParserContext_Execute(ParserContext *context, const char *input)
+int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv)
+{
+    int i;
+    InputSource is;
+    for (i = 0; i < argc; i++) {
+        if (InputSource_Init(&is, argv[i]) == NULL) {
+            ParserContext_SetError(context,
+                    "parse error: cannot load input file(%s)", argv[i]);
+            return 1;
+        }
+        if (ParserContext_Execute(context, &is)) {
+            ParserContext_SetError(context,
+                    "parse error: input file(%s)", argv[i]);
+            InputSource_Dispose(&is);
+            return 1;
+        }
+        InputSource_Dispose(&is);
+    }
+    return 0;
+}
+
+int ParserContext_Execute(ParserContext *context, InputSource *input)
 {
     return 0;
 }

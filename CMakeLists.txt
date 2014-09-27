@@ -32,7 +32,7 @@ else(MSVC)
 endif(MSVC)
 
 ## Source Code settings
-set(PEGVM_SOURCE src/pegvm.c src/loader.c src/main.c)
+set(PEGVM_SOURCE src/pegvm.c src/loader.c src/input_source.c)
 
 set(PACKAGE_NAME    ${PROJECT_NAME})
 set(PACKAGE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
@@ -92,14 +92,25 @@ add_definitions(-DHAVE_CONFIG_H)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake
 		${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
+set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${INCLUDE_DIRS})
 
-add_executable(pegvm ${PEGVM_SOURCE})
+add_library(pegvm SHARED ${PEGVM_SOURCE})
 target_link_libraries(pegvm ${HAVE_LIBGC})
 
-enable_testing()
+add_executable(pegvm_bin src/main.c)
+target_link_libraries(pegvm_bin pegvm)
+set_target_properties(pegvm_bin PROPERTIES OUTPUT_NAME pegvm)
 
-install(TARGETS pegvm pegvm
+enable_testing()
+add_executable(test_input_source test/test_input_source.c)
+target_link_libraries(test_input_source pegvm)
+add_test(test_input_source test_input_source)
+
+install(TARGETS pegvm pegvm_bin
 		RUNTIME DESTINATION bin
+		LIBRARY DESTINATION lib${LIB_SUFFIX}
 		)
 
 MESSAGE(STATUS)
