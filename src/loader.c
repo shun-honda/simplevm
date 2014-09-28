@@ -33,6 +33,75 @@ static uint8_t *pegvm_string_copy(ARRAY(uint8_t) *src)
     return str;
 }
 
+static uint8_t get_next_char(ARRAY(uint8_t) *bdata, size_t *pos)
+{
+    uint8_t c = ARRAY_get(uint8_t, bdata, *pos);
+    if (c) {
+        if (c == '\\' &&
+                *pos + 1< ARRAY_size(*bdata) &&
+                (c = ARRAY_get(uint8_t, bdata, *pos + 1))) {
+            // peg4d only support \f, \n, \r, \t, \v
+            *pos = *pos + 1;
+            switch (c) {
+            case 'f':  c = '\f';   /* ff */ break;
+            case 'n':  c = '\n';   /* nl */ break;
+            case 'r':  c = '\r';   /* cr */ break;
+            case 't':  c = '\t';   /* ht */ break;
+            case 'v':  c = '\013'; /* vt */ break;
+            default:
+                       assert(0 && "FIXME");
+            }
+        }
+    }
+    return c;
+}
+
+static uint8_t *pegvm_make_charset(ARRAY(uint8_t) *bdata)
+{
+    size_t pos = 0;
+    int flip_bit = 0;
+    // FIXME support unicode, hexcode
+    uint8_t bits[32]; // 8 * 32 = 256
+    uint8_t c = 0, start;
+    uint8_t *set = malloc(32);
+    if (ARRAY_size(*bdata) && ARRAY_get(uint8_t, bdata, 0) == '^') {
+        memset(bits, 255, 32);
+        flip_bit = 1;
+        pos++;
+    }
+    else {
+        memset(bits, 0, 32);
+    }
+    for (pos = 0; pos < ARRAY_size(*bdata); pos++) {
+        if (ARRAY_get(uint8_t, bdata, pos) == '-' &&
+                pos < ARRAY_size(*bdata) + 1) {
+            uint8_t last;
+            c = start;
+            pos++;
+            for (last = get_next_char(bdata, &pos); c < last; c++) {
+                if (flip_bit) {
+                    bits[c / 8] &= ~(1 << (c % 8));
+                }
+                else {
+                    bits[c / 8] |= 1 << (c % 8);
+                }
+            }
+        }
+        else {
+            c = get_next_char(bdata, &pos);
+            if (flip_bit) {
+                bits[c / 8] &= ~(1 << (c % 8));
+            }
+            else {
+                bits[c / 8] |= 1 << (c % 8);
+            }
+            start = c;
+        }
+    }
+    memcpy(set, bits, 32);
+    return set;
+}
+
 static Instruction *Emit_EXIT(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
 {
     self->ndata = 0;
@@ -79,6 +148,7 @@ static Instruction *Emit_MatchText(Instruction *self, uint32_t ndata, ARRAY(uint
         self->ndata = ndata;
     }
     else {
+        assert(0 && "Not Implemented");
         self->bdata = pegvm_string_copy(bdata);
     }
     return self;
@@ -199,12 +269,10 @@ static Instruction *Emit_RememberPosition(Instruction *self, uint32_t ndata, ARR
 }
 static Instruction *Emit_CommitPosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
 {
-    self->ndata = 0;
     return self;
 }
 static Instruction *Emit_BacktrackPosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
 {
-    self->ndata = 0;
     return self;
 }
 static Instruction *Emit_RememberSequencePosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
@@ -214,12 +282,10 @@ static Instruction *Emit_RememberSequencePosition(Instruction *self, uint32_t nd
 }
 static Instruction *Emit_CommitSequencePosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
 {
-    self->ndata = 0;
     return self;
 }
 static Instruction *Emit_BackTrackSequencePosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
 {
-    self->ndata = 0;
     return self;
 }
 static Instruction *Emit_RememberFailurePosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
@@ -234,22 +300,18 @@ static Instruction *Emit_UpdateFailurePosition(Instruction *self, uint32_t ndata
 }
 static Instruction *Emit_ForgetFailurePosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
 {
-    self->ndata = 0;
     return self;
 }
 static Instruction *Emit_StoreObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
 {
-    self->ndata = 0;
     return self;
 }
 static Instruction *Emit_DropStoredObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
 {
-    self->ndata = 0;
     return self;
 }
 static Instruction *Emit_RestoreObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
 {
-    self->ndata = 0;
     return self;
 }
 static Instruction *Emit_RestoreObjectIfFailure(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
@@ -259,7 +321,6 @@ static Instruction *Emit_RestoreObjectIfFailure(Instruction *self, uint32_t ndat
 }
 static Instruction *Emit_RestoreNegativeObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
 {
-    self->ndata = 0;
     return self;
 }
 static Instruction *Emit_ConnectObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
@@ -279,7 +340,6 @@ static Instruction *Emit_EnableTransCapture(Instruction *self, uint32_t ndata, A
 }
 static Instruction *Emit_NewObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
 {
-    self->ndata = 0;
     return self;
 }
 static Instruction *Emit_LeftJoinObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
@@ -326,10 +386,30 @@ static void PegVMInstruction_relocate(Instruction *code, ARRAY(Instruction) *ins
     FOR_EACH_ARRAY(*insts, x, e) {
         if (PEGVM_OP_EXIT < x->opcode && x->opcode <= PEGVM_OP_IFFAIL) {
             uint32_t dst = x->ndata;
-            x->dst = code + dst;
+            //FIXME(imasahiro) bytecode generator emit wrong index
+            x->dst = code + dst + 1;
         }
     }
     memcpy(code, ARRAY_list(*insts), sizeof(Instruction) * ARRAY_size(*insts));
+}
+
+static void PegVMInstruction_dump(PegVMInstruction *code, size_t len)
+{
+    size_t i;
+    for (i = 0; i < len; i++) {
+        Instruction *inst = &code[i];
+        int opcode = inst->opcode;
+        uint32_t ndata = inst->ndata;
+        uint8_t *bdata = inst->bdata;
+        fprintf(stderr, "[%04d] op=%-28s", (int)i, get_opname(opcode));
+        if (ndata) {
+            fprintf(stderr, " ndata=%08d", ndata);
+        }
+        if (bdata) {
+            fprintf(stderr, " bdata=%s", (char *)bdata);
+        }
+        fprintf(stderr, "bdata=\n");
+    }
 }
 
 PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
@@ -359,24 +439,15 @@ PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
             ARRAY_add(uint8_t, &buf, bdata);
         }
         inst.opcode = opcode;
+        inst.ndata = 0;
+        inst.bdata = NULL;
         instp = f_inst[opcode](&inst, ndata, &buf);
         ARRAY_add(Instruction, &insts, instp);
-        if (ARRAY_last(buf) != 0) {
-            ARRAY_add(uint8_t, &buf, 0);
-        }
-
-        fprintf(stderr, "[%04d] op=%-28s ndata=%08d ", idx, get_opname(opcode), ndata);
-        if (ARRAY_size(buf)) {
-            fprintf(stderr, "bdata=%s\n", (char *)ARRAY_list(buf));
-        }
-        else {
-            fprintf(stderr, "bdata=\n");
-        }
-
         idx++;
     }
     code = (PegVMInstruction *) malloc(sizeof(Instruction) * ARRAY_size(insts));
     PegVMInstruction_relocate(code, &insts);
+    PegVMInstruction_dump(code, ARRAY_size(insts));
     code += 1; // Skip first EXIT opcode
     ARRAY_dispose(uint8_t, &buf);
     ARRAY_dispose(Instruction, &insts);
