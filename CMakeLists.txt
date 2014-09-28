@@ -108,6 +108,11 @@ add_executable(test_input_source test/test_input_source.c)
 target_link_libraries(test_input_source pegvm)
 add_test(test_input_source test_input_source)
 
+add_executable(test_load_bytecode test/test_load_bytecode.c)
+target_link_libraries(test_load_bytecode pegvm)
+add_test(test_load_bytecode test_load_bytecode)
+
+
 install(TARGETS pegvm pegvm_bin
 		RUNTIME DESTINATION bin
 		LIBRARY DESTINATION lib${LIB_SUFFIX}
