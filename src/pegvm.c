@@ -45,13 +45,20 @@ int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv
 {
     int i;
     InputSource is;
+    PegVMInstruction *insts;
     for (i = 0; i < argc; i++) {
         if (InputSource_Init(&is, argv[i]) == NULL) {
             ParserContext_SetError(context,
                     "parse error: cannot load input file(%s)", argv[i]);
             return 1;
         }
-        if (ParserContext_Execute(context, &is)) {
+
+        // load EXIT
+        insts = context->instructions;
+        PUSH_SP((long)insts);
+        insts += 2; // skip dummy inst
+
+        if (ParserContext_Execute(context, insts, &is)) {
             ParserContext_SetError(context,
                     "parse error: input file(%s)", argv[i]);
             InputSource_Dispose(&is);
@@ -67,18 +74,19 @@ static inline int ParserContext_IsFailure(ParserContext *context)
     return context->current_node == NULL;
 }
 
-#define INC_SP(N) (context->stack_pointer += (N))
-#define DEC_SP(N) (context->stack_pointer -= (N))
-#define PUSH_SP(INST) (*context->stack_pointer = (INST), INC_SP(1))
-#define POP_SP(INST) (DEC_SP(1))
-#define JUMP(DST) inst = (DST); goto L_head;
-int ParserContext_Execute(ParserContext *context, InputSource *input)
+#define MAX(A, B) ((A)>(B)?(A):(B))
+static inline void ParserContext_RecordFailurePos(ParserContext *context, InputSource *input)
 {
-    PegVMInstruction *inst = context->instructions;
+    context->failure_pos = MAX(input->pos, context->failure_pos);
+    context->current_node = NULL;
+}
+
+int ParserContext_Execute(ParserContext *context, Instruction *inst, InputSource *input)
+{
     while (1) {
 L_head:
         switch (inst->opcode) {
-#define OP_CASE(OP) case PEGVM_OP_##OP:
+#define OP_CASE(OP) case PEGVM_OP_##OP: PegVMInstruction_dump(inst, 1);/*asm volatile("int3");*/
 #define DISPATCH_NEXT ++inst; break
             OP_CASE(EXIT) {
                 return 0;
@@ -95,13 +103,13 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(IFSUCC) {
-                if (ParserContext_IsFailure(context)) {
+                if (!ParserContext_IsFailure(context)) {
                     JUMP(inst->dst);
                 }
                 DISPATCH_NEXT;
             }
             OP_CASE(IFFAIL) {
-                if (!ParserContext_IsFailure(context)) {
+                if (ParserContext_IsFailure(context)) {
                     JUMP(inst->dst);
                 }
                 DISPATCH_NEXT;
@@ -114,7 +122,10 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(MatchText) {
-                assert(0 && "Not implemented");
+                uint8_t c = InputSource_GetUint8(input);
+                if (c != (uint8_t)inst->ndata) {
+                    ParserContext_RecordFailurePos(context, input);
+                }
                 DISPATCH_NEXT;
             }
             OP_CASE(MatchByteChar) {
@@ -126,7 +137,11 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(MatchAnyChar) {
-                assert(0 && "Not implemented");
+                uint8_t c = InputSource_GetUint8(input);
+                if (c == (uint8_t)-1) {
+                    // FIXME support unicode
+                    ParserContext_RecordFailurePos(context, input);
+                }
                 DISPATCH_NEXT;
             }
             OP_CASE(MatchTextNot) {
@@ -154,27 +169,35 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(RememberPosition) {
-                assert(0 && "Not implemented");
+                PUSH_SP(input->pos);
                 DISPATCH_NEXT;
             }
             OP_CASE(CommitPosition) {
-                assert(0 && "Not implemented");
+                POP_SP();//input->pos
                 DISPATCH_NEXT;
             }
             OP_CASE(BacktrackPosition) {
-                assert(0 && "Not implemented");
+                size_t pos = (size_t)POP_SP();
+                //FIXME add stats
+                input->pos = pos;
                 DISPATCH_NEXT;
             }
             OP_CASE(RememberSequencePosition) {
-                assert(0 && "Not implemented");
+                PUSH_SP(input->pos);
+                PUSH_SP(input->pos);
+                PUSH_SP((long)context->current_node);
                 DISPATCH_NEXT;
             }
             OP_CASE(CommitSequencePosition) {
-                assert(0 && "Not implemented");
+                POP_SP();//(long)context->current_node
+                POP_SP();//input->pos
+                POP_SP();//input->pos
                 DISPATCH_NEXT;
             }
             OP_CASE(BackTrackSequencePosition) {
-                assert(0 && "Not implemented");
+                context->current_node = (NODE *)POP_SP();
+                POP_SP();//input->pos
+                POP_SP();//input->pos
                 DISPATCH_NEXT;
             }
             OP_CASE(RememberFailurePosition) {
@@ -186,19 +209,19 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(ForgetFailurePosition) {
-                assert(0 && "Not implemented");
+                POP_SP();//input->pos
                 DISPATCH_NEXT;
             }
             OP_CASE(StoreObject) {
-                assert(0 && "Not implemented");
+                PUSH_SP((long)context->current_node);
                 DISPATCH_NEXT;
             }
             OP_CASE(DropStoredObject) {
-                assert(0 && "Not implemented");
+                POP_SP();//(long)context->current_node
                 DISPATCH_NEXT;
             }
             OP_CASE(RestoreObject) {
-                assert(0 && "Not implemented");
+                context->current_node = (NODE *)POP_SP();
                 DISPATCH_NEXT;
             }
             OP_CASE(RestoreObjectIfFailure) {
@@ -206,11 +229,19 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(RestoreNegativeObject) {
-                assert(0 && "Not implemented");
+                NODE *node = (NODE *)POP_SP();
+                if (ParserContext_IsFailure(context)) {
+                    context->current_node = node;
+                }
+                else {
+                    ParserContext_RecordFailurePos(context, input);
+                }
                 DISPATCH_NEXT;
             }
             OP_CASE(ConnectObject) {
-                assert(0 && "Not implemented");
+                NODE *parent = (NODE *)POP_SP();
+                NODE_AppendChild(parent, context->current_node);
+                context->current_node = parent;
                 DISPATCH_NEXT;
             }
             OP_CASE(DisableTransCapture) {
@@ -222,7 +253,7 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(NewObject) {
-                assert(0 && "Not implemented");
+                context->current_node = NODE_New(NODE_TYPE_DEFAULT);
                 DISPATCH_NEXT;
             }
             OP_CASE(LeftJoinObject) {
@@ -238,7 +269,8 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(Tagging) {
-                assert(0 && "Not implemented");
+                long length = input->pos - TOP_SP();
+                NODE_SetTag(context->current_node, inst->bdata, length);
                 DISPATCH_NEXT;
             }
             OP_CASE(Value) {

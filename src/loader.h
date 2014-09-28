@@ -17,4 +17,5 @@ typedef struct Instruction {
 } PegVMInstruction, Instruction;
 
 PegVMInstruction *ByteCodeLoader_Load(InputSource *input);
+void PegVMInstruction_dump(PegVMInstruction *code, size_t len);
 #endif

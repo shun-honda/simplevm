@@ -1,6 +1,7 @@
 #include "input_source.h"
 #include "loader.h"
 #include "node.h"
+#include <assert.h>
 
 #ifndef PEGVM_H
 #define PEGVM_H
@@ -9,6 +10,7 @@
 
 typedef struct ParserContext {
     long *stack_pointer;
+    size_t failure_pos;
     NODE *current_node;
     InputSource *current_source;
     PegVMInstruction *instructions;
@@ -19,8 +21,30 @@ typedef struct ParserContext {
 void ParserContext_Init(ParserContext *context);
 void ParserContext_Destruct(ParserContext *context);
 int ParserContext_LoadSyntax(ParserContext *context, const char *file);
-int ParserContext_Execute(ParserContext *context, InputSource *input);
+int ParserContext_Execute(ParserContext *context, PegVMInstruction *inst, InputSource *input);
 int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv);
+
+// #define INC_SP(N) (context->stack_pointer += (N))
+// #define DEC_SP(N) (context->stack_pointer -= (N))
+static inline long INC_SP(ParserContext *context, int N)
+{
+    context->stack_pointer += (N);
+    assert(context->stack_pointer >= context->stack_pointer_base && context->stack_pointer < ((long *)context->stack_pointer_base) + PARSER_CONTEXT_MAX_STACK_LENGTH);
+    return *context->stack_pointer;
+}
+
+static inline long DEC_SP(ParserContext *context, int N)
+{
+    context->stack_pointer -= N;
+    assert(context->stack_pointer >= context->stack_pointer_base && context->stack_pointer < ((long *)context->stack_pointer_base) + PARSER_CONTEXT_MAX_STACK_LENGTH);
+    return *context->stack_pointer;
+}
+
+#define PUSH_SP(INST) (*context->stack_pointer = (INST), INC_SP(context, 1))
+#define POP_SP(INST) (DEC_SP(context, 1))
+#define TOP_SP() (*context->stack_pointer)
+#define JUMP(DST) inst = (DST); goto L_head;
+
 
 #define PEGVM_OP_EACH(OP)\
         OP(EXIT)\

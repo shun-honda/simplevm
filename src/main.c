@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <gc/gc.h>
 #include "pegvm.h"
 
 static void pegvm_usage(const char *file)
@@ -23,6 +24,7 @@ static void pegvm_error(const char *errmsg)
 int main(int argc, char * const argv[])
 {
     ParserContext context;
+    GC_INIT();
     const char *syntax_file = NULL;
     const char *orig_argv0 = argv[0];
     int opt;
