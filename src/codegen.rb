@@ -58,7 +58,7 @@ irs.each {|ir|
     puts "    fprintf(stderr, \"[%p] #{ir.name} \", self);"
     if ir.arg.length > 0
        if ir.arg[1] == "char"
-           puts "    fprintf(stderr, \"#{ir.arg[1]}=%c\", (char)self->ndata);"
+           puts "    fprintf(stderr, \"#{ir.arg[1]}='%c'\", (char)self->ndata);"
        elsif ir.arg[1] == "target"
            puts "    fprintf(stderr, \"#{ir.arg[1]}=%p\", self->dst);"
        elsif ir.arg[1] == "text"

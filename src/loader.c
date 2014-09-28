@@ -144,7 +144,7 @@ static void PegVMInstruction_relocate(Instruction *code, ARRAY(Instruction) *ins
     memcpy(code, ARRAY_list(*insts), sizeof(Instruction) * ARRAY_size(*insts));
 }
 
-static void PegVMInstruction_dump(PegVMInstruction *code, size_t len)
+void PegVMInstruction_dump(PegVMInstruction *code, size_t len)
 {
     size_t i;
     for (i = 0; i < len; i++) {
@@ -159,11 +159,12 @@ PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
     int idx = 0;
     Instruction inst, *instp;
     ARRAY(uint8_t) buf;
-    ARRAY(Instruction) insts;
+    ARRAY(Instruction) insts = {};
     ARRAY_init(uint8_t, &buf, 1);
     ARRAY_init(Instruction, &insts, 1);
 
     PegVMInstruction *code = NULL;
+
     for (i = 0; i < input->length; i++) {
         uint8_t opcode = InputSource_GetUint8(input);
         uint8_t bdata = 0;
@@ -188,8 +189,7 @@ PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
     }
     code = (PegVMInstruction *) malloc(sizeof(Instruction) * ARRAY_size(insts));
     PegVMInstruction_relocate(code, &insts);
-    PegVMInstruction_dump(code, ARRAY_size(insts));
-    code += 1; // Skip first EXIT opcode
+    // PegVMInstruction_dump(code + 1, ARRAY_size(insts));
     ARRAY_dispose(uint8_t, &buf);
     ARRAY_dispose(Instruction, &insts);
     return code;

@@ -93,7 +93,7 @@ static Instruction *Emit_MatchText(Instruction *self, uint32_t ndata, ARRAY(uint
 static void Dump_MatchText(Instruction *self)
 {
     fprintf(stderr, "[%p] MatchText ", self);
-    fprintf(stderr, "char=%c", (char)self->ndata);
+    fprintf(stderr, "char='%c'", (char)self->ndata);
     fprintf(stderr, "\n");
 }
 static Instruction *Emit_MatchByteChar(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)

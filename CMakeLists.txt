@@ -31,7 +31,7 @@ else(MSVC)
 endif(MSVC)
 
 ## Source Code settings
-set(PEGVM_SOURCE src/pegvm.c src/loader.c src/input_source.c)
+set(PEGVM_SOURCE src/pegvm.c src/loader.c src/input_source.c src/node.c)
 
 set(PACKAGE_NAME    ${PROJECT_NAME})
 set(PACKAGE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
