@@ -165,10 +165,6 @@ PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
 
     PegVMInstruction *code = NULL;
 
-    // adds dummy code
-    instp = Emit_EXIT(&inst, 0, NULL);
-    ARRAY_add(Instruction, &insts, instp);
-
     for (i = 0; i < input->length; i++) {
         uint8_t opcode = InputSource_GetUint8(input);
         uint8_t bdata = 0;
@@ -193,7 +189,7 @@ PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
     }
     code = (PegVMInstruction *) malloc(sizeof(Instruction) * ARRAY_size(insts));
     PegVMInstruction_relocate(code, &insts);
-    PegVMInstruction_dump(code + 1, ARRAY_size(insts));
+    // PegVMInstruction_dump(code + 1, ARRAY_size(insts));
     ARRAY_dispose(uint8_t, &buf);
     ARRAY_dispose(Instruction, &insts);
     return code;

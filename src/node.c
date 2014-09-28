@@ -1,6 +1,7 @@
 #include "node.h"
 #include "karray.h"
 #include <gc/gc.h>
+#include <stdio.h>
 
 DEF_ARRAY_STRUCT0(NODE, unsigned short);
 DEF_ARRAY_T(NODE);
@@ -33,4 +34,22 @@ void NODE_AppendChild(NODE *parent, NODE *node)
 void NODE_Dispose(NODE *self)
 {
     ARRAY_dispose(NODE, &self->node_list);
+}
+
+void NODE_dump(NODE *node, int level)
+{
+    NODE *x, *e;
+    int i;
+    for (i = 0; i < level; i++) {
+        fprintf(stderr, "  ");
+    }
+    if (node) {
+        fprintf(stderr, "%p tag:%s\n", node, node->tag);
+        FOR_EACH_ARRAY(node->node_list, x, e) {
+            NODE_dump(x, level + 1);
+        }
+    }
+    else {
+        fprintf(stderr, "%p tag:null\n", node);
+    }
 }

@@ -55,8 +55,11 @@ int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv
 
         // load EXIT
         insts = context->instructions;
-        PUSH_SP((long)insts);
-        insts += 2; // skip dummy inst
+        PUSH_SP((long)(insts - 1));
+        insts += 1; // skip dummy inst
+
+        // push root node
+        context->current_node = NODE_New(NODE_TYPE_DEFAULT);
 
         if (ParserContext_Execute(context, insts, &is)) {
             ParserContext_SetError(context,
@@ -64,6 +67,7 @@ int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv
             InputSource_Dispose(&is);
             return 1;
         }
+        NODE_dump(context->current_node, 0);
         InputSource_Dispose(&is);
     }
     return 0;
@@ -86,7 +90,7 @@ int ParserContext_Execute(ParserContext *context, Instruction *inst, InputSource
     while (1) {
 L_head:
         switch (inst->opcode) {
-#define OP_CASE(OP) case PEGVM_OP_##OP: PegVMInstruction_dump(inst, 1);/*asm volatile("int3");*/
+#define OP_CASE(OP) case PEGVM_OP_##OP: PegVMInstruction_dump(inst, 1); asm volatile("int3");
 #define DISPATCH_NEXT ++inst; break
             OP_CASE(EXIT) {
                 return 0;
@@ -123,6 +127,7 @@ L_head:
             }
             OP_CASE(MatchText) {
                 uint8_t c = InputSource_GetUint8(input);
+                fprintf(stderr, "T c='%c', n='%c'\n", (char)c, (char)inst->ndata);
                 if (c != (uint8_t)inst->ndata) {
                     ParserContext_RecordFailurePos(context, input);
                 }
@@ -138,6 +143,7 @@ L_head:
             }
             OP_CASE(MatchAnyChar) {
                 uint8_t c = InputSource_GetUint8(input);
+                fprintf(stderr, "A c='%c'\n", (char)c);
                 if (c == (uint8_t)-1) {
                     // FIXME support unicode
                     ParserContext_RecordFailurePos(context, input);
@@ -197,7 +203,7 @@ L_head:
             OP_CASE(BackTrackSequencePosition) {
                 context->current_node = (NODE *)POP_SP();
                 POP_SP();//input->pos
-                POP_SP();//input->pos
+                input->pos = POP_SP();//input->pos
                 DISPATCH_NEXT;
             }
             OP_CASE(RememberFailurePosition) {
@@ -271,6 +277,7 @@ L_head:
             OP_CASE(Tagging) {
                 long length = input->pos - TOP_SP();
                 NODE_SetTag(context->current_node, inst->bdata, length);
+                fprintf(stderr, "tag '%s'\n", inst->bdata);
                 DISPATCH_NEXT;
             }
             OP_CASE(Value) {

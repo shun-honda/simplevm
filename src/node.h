@@ -8,6 +8,7 @@ NODE *NODE_New(unsigned type);
 void NODE_Dispose(NODE *self);
 void NODE_SetTag(NODE *self, uint8_t *bdata, int length);
 void NODE_AppendChild(NODE *parent, NODE *node);
+void NODE_dump(NODE *node, int level);
 
 enum node_type {
   NODE_TYPE_DEFAULT
