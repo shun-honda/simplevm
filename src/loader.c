@@ -377,6 +377,7 @@ PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
     }
     code = (PegVMInstruction *) malloc(sizeof(Instruction) * ARRAY_size(insts));
     PegVMInstruction_relocate(code, &insts);
+    code += 1; // Skip first EXIT opcode
     ARRAY_dispose(uint8_t, &buf);
     ARRAY_dispose(Instruction, &insts);
     return code;
