@@ -1,5 +1,6 @@
 #include "input_source.h"
 #include "loader.h"
+#include "node.h"
 
 #ifndef PEGVM_H
 #define PEGVM_H
@@ -8,6 +9,7 @@
 
 typedef struct ParserContext {
     long *stack_pointer;
+    NODE *current_node;
     InputSource *current_source;
     PegVMInstruction *instructions;
     long stack_pointer_base[PARSER_CONTEXT_MAX_STACK_LENGTH];

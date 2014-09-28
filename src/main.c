@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <gc/gc.h>
 #include <stdlib.h>
 #include "pegvm.h"
 
