@@ -62,10 +62,16 @@ int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv
     return 0;
 }
 
+static inline int ParserContext_IsFailure(ParserContext *context)
+{
+    return context->current_node == NULL;
+}
+
 #define INC_SP(N) (context->stack_pointer += (N))
 #define DEC_SP(N) (context->stack_pointer -= (N))
 #define PUSH_SP(INST) (*context->stack_pointer = (INST), INC_SP(1))
 #define POP_SP(INST) (DEC_SP(1))
+#define JUMP(DST) inst = (DST); goto L_head;
 int ParserContext_Execute(ParserContext *context, InputSource *input)
 {
     PegVMInstruction *inst = context->instructions;
@@ -78,28 +84,29 @@ L_head:
                 return 0;
             }
             OP_CASE(JUMP) {
-                inst = inst->dst;
-                goto L_head;
+                JUMP(inst->dst);
             }
             OP_CASE(CALL) {
                 PUSH_SP((long)inst);
-                inst = inst->dst;
-                goto L_head;
+                JUMP(inst->dst);
             }
             OP_CASE(RET) {
                 inst = (PegVMInstruction *)POP_SP();
                 DISPATCH_NEXT;
             }
             OP_CASE(IFSUCC) {
-                assert(0 && "Not implemented");
+                if (ParserContext_IsFailure(context)) {
+                    JUMP(inst->dst);
+                }
                 DISPATCH_NEXT;
             }
             OP_CASE(IFFAIL) {
-                assert(0 && "Not implemented");
+                if (!ParserContext_IsFailure(context)) {
+                    JUMP(inst->dst);
+                }
                 DISPATCH_NEXT;
             }
             OP_CASE(NOP) {
-                assert(0 && "Not implemented");
                 DISPATCH_NEXT;
             }
             OP_CASE(Failure) {
