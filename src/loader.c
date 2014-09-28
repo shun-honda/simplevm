@@ -33,62 +33,6 @@ static uint8_t *pegvm_string_copy(ARRAY(uint8_t) *src)
     return str;
 }
 
-static Instruction *Emit_EXIT(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = 0;
-    return self;
-}
-static Instruction *Emit_JUMP(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = ndata;
-    return self;
-}
-static Instruction *Emit_CALL(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = ndata;
-    return self;
-}
-static Instruction *Emit_RET(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = 0;
-    return self;
-}
-static Instruction *Emit_IFSUCC(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = ndata;
-    return self;
-}
-static Instruction *Emit_IFFAIL(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = ndata;
-    return self;
-}
-static Instruction *Emit_NOP(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = 0;
-    return self;
-}
-static Instruction *Emit_Failure(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_MatchText(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    if (ndata) {
-        self->ndata = ndata;
-    }
-    else {
-        self->bdata = pegvm_string_copy(bdata);
-    }
-    return self;
-}
-static Instruction *Emit_MatchByteChar(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-
 static uint8_t get_next_char(ARRAY(uint8_t) *bdata, size_t *pos)
 {
     uint8_t c = ARRAY_get(uint8_t, bdata, *pos);
@@ -112,13 +56,14 @@ static uint8_t get_next_char(ARRAY(uint8_t) *bdata, size_t *pos)
     return c;
 }
 
-static Instruction *Emit_MatchCharset(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
+static uint8_t *pegvm_make_charset(ARRAY(uint8_t) *bdata)
 {
+    size_t pos = 0;
+    int flip_bit = 0;
     // FIXME support unicode, hexcode
     uint8_t bits[32]; // 8 * 32 = 256
     uint8_t c = 0, start;
-    size_t pos = 0;
-    int flip_bit = 0;
+    uint8_t *set = malloc(32);
     if (ARRAY_size(*bdata) && ARRAY_get(uint8_t, bdata, 0) == '^') {
         memset(bits, 255, 32);
         flip_bit = 1;
@@ -153,165 +98,24 @@ static Instruction *Emit_MatchCharset(Instruction *self, uint32_t ndata, ARRAY(u
             start = c;
         }
     }
-    self->bdata = malloc(32);
-    memcpy(self->bdata, bits, 32);
-    return self;
+    memcpy(set, bits, 32);
+    return set;
 }
-static Instruction *Emit_MatchAnyChar(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
+
+static char *pegvm_dump_charset(uint8_t *bits)
 {
-    self->ndata = 0;
-    return self;
+    static char charset[256];
+    size_t i, pos = 0;
+    memset(charset, 0, 256);
+    for (i = 0; i < 256; i++) {
+        if ((bits[i / 8] & (1 << (i % 8))) == (1 << (i % 8))) {
+            charset[pos++] = (char) i;
+        }
+    }
+    return charset;
 }
-static Instruction *Emit_MatchTextNot(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_MatchByteCharNot(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_MatchCharsetNot(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_MatchOptionalText(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_MatchOptionalByteChar(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_MatchOptionalCharset(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_RememberPosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = ndata;
-    return self;
-}
-static Instruction *Emit_CommitPosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = 0;
-    return self;
-}
-static Instruction *Emit_BacktrackPosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = 0;
-    return self;
-}
-static Instruction *Emit_RememberSequencePosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = ndata;
-    return self;
-}
-static Instruction *Emit_CommitSequencePosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = 0;
-    return self;
-}
-static Instruction *Emit_BackTrackSequencePosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = 0;
-    return self;
-}
-static Instruction *Emit_RememberFailurePosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_UpdateFailurePosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_ForgetFailurePosition(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = 0;
-    return self;
-}
-static Instruction *Emit_StoreObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = 0;
-    return self;
-}
-static Instruction *Emit_DropStoredObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = 0;
-    return self;
-}
-static Instruction *Emit_RestoreObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = 0;
-    return self;
-}
-static Instruction *Emit_RestoreObjectIfFailure(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_RestoreNegativeObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = 0;
-    return self;
-}
-static Instruction *Emit_ConnectObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->bdata = pegvm_string_copy(bdata);
-    return self;
-}
-static Instruction *Emit_DisableTransCapture(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_EnableTransCapture(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_NewObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->ndata = 0;
-    return self;
-}
-static Instruction *Emit_LeftJoinObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_CommitObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_RefreshStoredObject(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_Tagging(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    self->bdata = pegvm_string_copy(bdata);
-    return self;
-}
-static Instruction *Emit_Value(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
-static Instruction *Emit_Indent(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata)
-{
-    assert(0 && "Not Implemented");
-    return self;
-}
+
+#include "loader.generated.c"
 
 typedef Instruction *(*inst_load_t)(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata);
 static inst_load_t f_inst[] = {
@@ -320,16 +124,33 @@ static inst_load_t f_inst[] = {
 #undef DEFINE_LOAD_F
 };
 
+typedef void (*inst_dump_t)(Instruction *self);
+static inst_dump_t dump_inst[] = {
+#define DEFINE_DUMP_F(OP) Dump_##OP,
+    PEGVM_OP_EACH(DEFINE_DUMP_F)
+#undef DEFINE_DUMP_F
+};
+
 static void PegVMInstruction_relocate(Instruction *code, ARRAY(Instruction) *insts)
 {
     Instruction *x, *e;
     FOR_EACH_ARRAY(*insts, x, e) {
         if (PEGVM_OP_EXIT < x->opcode && x->opcode <= PEGVM_OP_IFFAIL) {
             uint32_t dst = x->ndata;
-            x->dst = code + dst;
+            //FIXME(imasahiro) bytecode generator emit wrong index
+            x->dst = code + dst + 1;
         }
     }
     memcpy(code, ARRAY_list(*insts), sizeof(Instruction) * ARRAY_size(*insts));
+}
+
+static void PegVMInstruction_dump(PegVMInstruction *code, size_t len)
+{
+    size_t i;
+    for (i = 0; i < len; i++) {
+        Instruction *inst = &code[i];
+        dump_inst[inst->opcode](inst);
+    }
 }
 
 PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
@@ -359,24 +180,16 @@ PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
             ARRAY_add(uint8_t, &buf, bdata);
         }
         inst.opcode = opcode;
+        inst.ndata = 0;
+        inst.bdata = NULL;
         instp = f_inst[opcode](&inst, ndata, &buf);
         ARRAY_add(Instruction, &insts, instp);
-        if (ARRAY_last(buf) != 0) {
-            ARRAY_add(uint8_t, &buf, 0);
-        }
-
-        fprintf(stderr, "[%04d] op=%-28s ndata=%08d ", idx, get_opname(opcode), ndata);
-        if (ARRAY_size(buf)) {
-            fprintf(stderr, "bdata=%s\n", (char *)ARRAY_list(buf));
-        }
-        else {
-            fprintf(stderr, "bdata=\n");
-        }
-
         idx++;
     }
     code = (PegVMInstruction *) malloc(sizeof(Instruction) * ARRAY_size(insts));
     PegVMInstruction_relocate(code, &insts);
+    PegVMInstruction_dump(code, ARRAY_size(insts));
+    code += 1; // Skip first EXIT opcode
     ARRAY_dispose(uint8_t, &buf);
     ARRAY_dispose(Instruction, &insts);
     return code;

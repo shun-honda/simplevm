@@ -76,10 +76,7 @@ static inline void ARRAY_##T##_dispose(ARRAY(T) *a) {\
     a->list     = 0;\
 }\
 static inline void ARRAY_##T##_add(ARRAY(T) *a, ValueType v) {\
-    if(a->size + 1 >= a->capacity) {\
-        a->capacity = 1 << LOG2(a->capacity * 2 + 1);\
-        a->list = (T *)realloc(a->list, sizeof(T) * a->capacity);\
-    }\
+    ARRAY_##T##_ensureSize(a, 1);\
     ARRAY_##T##_set(a, a->size++, v);\
 }\
 static inline void ARRAY_##T##_RemoveAt(ARRAY(T) *a, int idx) {\

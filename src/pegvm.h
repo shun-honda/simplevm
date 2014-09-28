@@ -4,10 +4,13 @@
 #ifndef PEGVM_H
 #define PEGVM_H
 #define PARSER_CONTEXT_MAX_ERROR_LENGTH 256
+#define PARSER_CONTEXT_MAX_STACK_LENGTH 1024
 
 typedef struct ParserContext {
+    long *stack_pointer;
     InputSource *current_source;
     PegVMInstruction *instructions;
+    long stack_pointer_base[PARSER_CONTEXT_MAX_STACK_LENGTH];
     char last_error[PARSER_CONTEXT_MAX_ERROR_LENGTH];
 } ParserContext;
 
