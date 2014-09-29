@@ -1,0 +1,6 @@
+{#JSON
+   {#KeyValue
+      {#String 'flag'}
+      {#True 'true'}
+   }
+}

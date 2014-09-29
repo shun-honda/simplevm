@@ -1,0 +1,17 @@
+{#JSON
+   {#KeyValue
+      {#String 'name'}
+      {#String 'honda'}
+   }
+   {#KeyValue
+      {#String 'id'}
+      {#Integer ''}
+   }
+   {#KeyValue
+      {#String 'friends'}
+      {#List
+         {#String 'A'}
+         {#String 'B'}
+      }
+   }
+}
