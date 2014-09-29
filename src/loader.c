@@ -153,19 +153,55 @@ void PegVMInstruction_dump(PegVMInstruction *code, size_t len)
     }
 }
 
+void ByteCodeInfo_dump(ByteCodeInfo *info)
+{
+    fprintf(stderr, "ByteCodeVersion=%ld\n", info->version);
+    fprintf(stderr, "PEGFile=%s\n", info->PegFileName);
+    fprintf(stderr, "LengthOfByteCode=%lld\n", info->bytecode_length);
+}
+
 PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
 {
     size_t i;
     int idx = 0;
     Instruction inst, *instp;
+    ByteCodeInfo *info = malloc(sizeof(ByteCodeInfo));
     ARRAY(uint8_t) buf;
     ARRAY(Instruction) insts = {};
     ARRAY_init(uint8_t, &buf, 1);
     ARRAY_init(Instruction, &insts, 1);
 
     PegVMInstruction *code = NULL;
-
-    for (i = 0; i < input->length; i++) {
+    
+    uint8_t version;
+    version = InputSource_GetUint8(input);
+    version = (version) | (InputSource_GetUint8(input) << 8);
+    version = (version) | (InputSource_GetUint8(input) << 16);
+    version = (version) | (InputSource_GetUint8(input) << 24);
+    uint32_t length;
+    length = InputSource_GetUint8(input);
+    length = (length) | (InputSource_GetUint8(input) << 8);
+    length = (length) | (InputSource_GetUint8(input) << 16);
+    length = (length) | (InputSource_GetUint8(input) << 24);
+    uint8_t *filename = malloc(sizeof(uint8_t) * length);
+    for (i = 0; i < length; i++) {
+        filename[i] = InputSource_GetUint8(input);
+    }
+    uint64_t bytecode_length;
+    bytecode_length = InputSource_GetUint8(input);
+    bytecode_length = (bytecode_length) | (InputSource_GetUint8(input) << 8);
+    bytecode_length = (bytecode_length) | (InputSource_GetUint8(input) << 16);
+    bytecode_length = (bytecode_length) | (InputSource_GetUint8(input) << 24);
+    uint64_t in;
+    for (i = 1; i < 5; i++) {
+        in = InputSource_GetUint8(input);
+        bytecode_length = (bytecode_length) | in << (8 * i);
+    }
+    info->version = version;
+    info->PegFileName = filename;
+    info->bytecode_length = bytecode_length;
+    
+    for (i = 0; i < bytecode_length; i++) {
         uint8_t opcode = InputSource_GetUint8(input);
         uint8_t bdata = 0;
         uint32_t ndata;
@@ -173,12 +209,13 @@ PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
         ndata = (ndata) | (InputSource_GetUint8(input) << 8);
         ndata = (ndata) | (InputSource_GetUint8(input) << 16);
         ndata = (ndata) | (InputSource_GetUint8(input) << 24);
-        if (opcode == 128) {
-            break;
-        }
         ARRAY_clear(buf);
-        while ((bdata = InputSource_GetUint8(input)) != 0) {
+        int j = 0;
+        uint8_t code_length = InputSource_GetUint8(input);
+        while (j < code_length) {
+            bdata = InputSource_GetUint8(input);
             ARRAY_add(uint8_t, &buf, bdata);
+            j++;
         }
         inst.opcode = opcode;
         inst.ndata = 0;
@@ -189,6 +226,7 @@ PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
     }
     code = (PegVMInstruction *) malloc(sizeof(Instruction) * ARRAY_size(insts));
     PegVMInstruction_relocate(code, &insts);
+    ByteCodeInfo_dump(info);
     // PegVMInstruction_dump(code + 1, ARRAY_size(insts));
     ARRAY_dispose(uint8_t, &buf);
     ARRAY_dispose(Instruction, &insts);
