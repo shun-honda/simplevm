@@ -184,7 +184,7 @@ L_head:
                 uint8_t c = InputSource_GetUint8(input);
                 uint8_t *charset = inst->bdata;
                 fprintf(stderr, "Charset c='%c'\n", (char)c);
-                if ((charset[c / 8] & (1 << (c % 8)))) {
+                if (!(charset[c / 8] & (1 << (c % 8)))) {
                     ParserContext_RecordFailurePos(context, input);
                 }
                 DISPATCH_NEXT;
@@ -311,7 +311,9 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(LeftJoinObject) {
-                assert(0 && "Not implemented");
+                NODE *parent = NODE_New(NODE_TYPE_DEFAULT, input->pos);
+                NODE_AppendChild(parent, context->current_node);
+                context->current_node = parent;
                 DISPATCH_NEXT;
             }
             OP_CASE(CommitObject) {
