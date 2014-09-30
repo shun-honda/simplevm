@@ -90,7 +90,7 @@ int ParserContext_Execute(ParserContext *context, Instruction *inst, InputSource
     while (1) {
 L_head:
         switch (inst->opcode) {
-#define OP_CASE(OP) case PEGVM_OP_##OP: PegVMInstruction_dump(inst, 1); asm volatile("int3");
+#define OP_CASE(OP) case PEGVM_OP_##OP: PegVMInstruction_dump(inst, 1); //asm volatile("int3");
 #define DISPATCH_NEXT ++inst; break
             OP_CASE(EXIT) {
                 return 0;
@@ -138,7 +138,11 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(MatchCharset) {
-                assert(0 && "Not implemented");
+                uint8_t c = InputSource_GetUint8(input);
+                fprintf(stderr, "Charset c='%c'\n", (char)c);
+                if (pegvm_unconsume_charset(inst->bdata, c)) {
+                    ParserContext_RecordFailurePos(context, input);
+                }
                 DISPATCH_NEXT;
             }
             OP_CASE(MatchAnyChar) {

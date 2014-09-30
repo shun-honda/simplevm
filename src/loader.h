@@ -22,6 +22,7 @@ typedef struct ByteCodeInfo {
     int64_t bytecode_length;
 }ByteCodeInfo;
 
+int pegvm_unconsume_charset(uint8_t *bits, uint8_t c);
 PegVMInstruction *ByteCodeLoader_Load(InputSource *input);
 void PegVMInstruction_dump(PegVMInstruction *code, size_t len);
 void ByteCodeInfo_dump(ByteCodeInfo *info);

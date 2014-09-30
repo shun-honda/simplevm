@@ -78,7 +78,7 @@ static uint8_t *pegvm_make_charset(ARRAY(uint8_t) *bdata)
             uint8_t last;
             c = start;
             pos++;
-            for (last = get_next_char(bdata, &pos); c < last; c++) {
+            for (last = get_next_char(bdata, &pos); c <= last; c++) {
                 if (flip_bit) {
                     bits[c / 8] &= ~(1 << (c % 8));
                 }
@@ -113,6 +113,19 @@ static char *pegvm_dump_charset(uint8_t *bits)
         }
     }
     return charset;
+}
+
+int pegvm_unconsume_charset(uint8_t *bits, uint8_t c)
+{
+    size_t i;
+    for (i = 0; i < 256; i++) {
+        if ((bits[i / 8] & (1 << (i % 8))) == (1 << (i % 8))) {
+            if (i == c) {
+                return 0;
+            }
+        }
+    }
+    return 1;
 }
 
 #include "loader.generated.c"
@@ -158,6 +171,7 @@ void ByteCodeInfo_dump(ByteCodeInfo *info)
     fprintf(stderr, "ByteCodeVersion=%ld\n", info->version);
     fprintf(stderr, "PEGFile=%s\n", info->PegFileName);
     fprintf(stderr, "LengthOfByteCode=%lld\n", info->bytecode_length);
+    fprintf(stderr, "\n");
 }
 
 PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
