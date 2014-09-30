@@ -327,7 +327,7 @@ L_head:
             OP_CASE(Tagging) {
                 //long length = input->pos - context->current_node.pos_node;
                 NODE_SetTag(context->current_node, inst->bdata, input);
-                fprintf(stderr, "tag '%s'\ntext '%s'\n", inst->bdata, NODE_GetConsumeText(context->current_node));
+                fprintf(stderr, "tag '%s'\ntext '%s'\n", inst->bdata, NODE_GetText(context->current_node));
                 DISPATCH_NEXT;
             }
             OP_CASE(Value) {

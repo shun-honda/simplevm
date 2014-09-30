@@ -8,7 +8,7 @@ DEF_ARRAY_T(NODE);
 
 struct NODE {
     uint8_t *tag;
-    uint8_t *consume_text;
+    uint8_t *text;
     unsigned pos;
     unsigned length;
     ARRAY(NODE) node_list;
@@ -30,14 +30,9 @@ void NODE_SetTag(NODE *self, uint8_t *bdata, InputSource *input)
     self->tag = bdata;
     if (ARRAY_size(self->node_list) == 0) {
         self->length = input->pos - self->pos;
-        self->consume_text = InputSource_CopyText(input, self->pos, self->length);
+        self->text = InputSource_CopyText(input, self->pos, self->length);
     }
     // ARRAY_ensureSize(NODE, self->node_list, length);
-}
-
-uint8_t *NODE_GetConsumeText(NODE *self)
-{
-    return self->consume_text;
 }
 
 void NODE_AppendChild(NODE *parent, NODE *node)
@@ -45,9 +40,18 @@ void NODE_AppendChild(NODE *parent, NODE *node)
     ARRAY_add(NODE, &parent->node_list, node);
 }
 
+uint8_t *NODE_GetText(NODE *self)
+{
+    return self->text;
+}
+
 void NODE_Dispose(NODE *self)
 {
     ARRAY_dispose(NODE, &self->node_list);
+    if (self->text) {
+        free(self->text);
+        self->text = NULL;
+    }
 }
 
 void NODE_dump(NODE *node, int level)
@@ -60,7 +64,7 @@ void NODE_dump(NODE *node, int level)
         }
         fprintf(stderr, "{#%s ", node->tag);
         if (ARRAY_size(node->node_list) == 0) {
-            fprintf(stderr, "'%s'", NODE_GetConsumeText(node));
+            fprintf(stderr, "'%s'", node->text);
         }
         else {
             fprintf(stderr, "\n");

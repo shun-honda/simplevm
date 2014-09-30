@@ -8,7 +8,7 @@ typedef struct NODE NODE;
 NODE *NODE_New(unsigned type, size_t pos);
 void NODE_Dispose(NODE *self);
 void NODE_SetTag(NODE *self, uint8_t *bdata, InputSource *input);
-uint8_t *NODE_GetConsumeText(NODE *self);
+uint8_t *NODE_GetText(NODE *self);
 void NODE_AppendChild(NODE *parent, NODE *node);
 void NODE_dump(NODE *node, int level);
 
