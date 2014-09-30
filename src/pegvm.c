@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
+static inline void PUSH_IP(ParserContext *context, PegVMInstruction *ip);
 
 static void ParserContext_SetError(ParserContext *context, const char *fmt, ...)
     __attribute__((format(printf, 2, 3)));
@@ -15,7 +16,8 @@ static void ParserContext_SetError(ParserContext *context, const char *fmt, ...)
 void ParserContext_Init(ParserContext *context)
 {
     memset(context, 0, sizeof(*context));
-    context->stack_pointer = context->stack_pointer_base;
+    context->stack_pointer = &context->stack_pointer_base[0];
+    context->call_stack_pointer = &context->call_stack_pointer_base[0];
 }
 
 void ParserContext_Dispose(ParserContext *context)
@@ -55,7 +57,7 @@ int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv
 
         // load EXIT
         insts = context->instructions;
-        PUSH_SP((long)(insts - 1));
+        PUSH_IP(context, insts - 1);
         insts += 1; // skip dummy inst
 
         // push root node
@@ -85,11 +87,50 @@ static inline void ParserContext_RecordFailurePos(ParserContext *context, InputS
     context->current_node = NULL;
 }
 
+// #define INC_SP(N) (context->stack_pointer += (N))
+// #define DEC_SP(N) (context->stack_pointer -= (N))
+static inline long INC_SP(ParserContext *context, int N)
+{
+    context->stack_pointer += (N);
+    assert(context->stack_pointer >= context->stack_pointer_base &&
+            context->stack_pointer < &context->stack_pointer_base[PARSER_CONTEXT_MAX_STACK_LENGTH]);
+    return *context->stack_pointer;
+}
+
+static inline long DEC_SP(ParserContext *context, int N)
+{
+    context->stack_pointer -= N;
+    assert(context->stack_pointer >= context->stack_pointer_base &&
+            context->stack_pointer < &context->stack_pointer_base[PARSER_CONTEXT_MAX_STACK_LENGTH]);
+    return *context->stack_pointer;
+}
+
+static inline void PUSH_IP(ParserContext *context, PegVMInstruction *ip)
+{
+    *context->call_stack_pointer++ = ip;
+    assert(context->call_stack_pointer >= context->call_stack_pointer_base &&
+            context->call_stack_pointer < &context->call_stack_pointer_base[PARSER_CONTEXT_MAX_STACK_LENGTH]);
+}
+
+static inline PegVMInstruction *POP_IP(ParserContext *context)
+{
+    --context->call_stack_pointer;
+    assert(context->call_stack_pointer >= context->call_stack_pointer_base &&
+            context->call_stack_pointer < &context->call_stack_pointer_base[PARSER_CONTEXT_MAX_STACK_LENGTH]);
+    return *context->call_stack_pointer;
+}
+
+#define PUSH_SP(INST) (*context->stack_pointer = (INST), INC_SP(context, 1))
+#define POP_SP(INST) (DEC_SP(context, 1))
+#define TOP_SP() (*context->stack_pointer)
+#define JUMP(DST) inst = (DST); goto L_head;
+
 int ParserContext_Execute(ParserContext *context, Instruction *inst, InputSource *input)
 {
     while (1) {
 L_head:
         switch (inst->opcode) {
+
 #define OP_CASE(OP) case PEGVM_OP_##OP: PegVMInstruction_dump(inst, 1); //asm volatile("int3");
 #define DISPATCH_NEXT ++inst; break
             OP_CASE(EXIT) {
@@ -99,11 +140,11 @@ L_head:
                 JUMP(inst->dst);
             }
             OP_CASE(CALL) {
-                PUSH_SP((long)inst);
+                PUSH_IP(context, inst);
                 JUMP(inst->dst);
             }
             OP_CASE(RET) {
-                inst = (PegVMInstruction *)POP_SP();
+                inst = POP_IP(context);
                 DISPATCH_NEXT;
             }
             OP_CASE(IFSUCC) {
