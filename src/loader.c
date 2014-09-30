@@ -72,9 +72,8 @@ static uint8_t *pegvm_make_charset(ARRAY(uint8_t) *bdata)
     size_t pos = 0;
     int flip_bit = 0;
     // FIXME support unicode, hexcode
-    uint8_t bits[32]; // 8 * 32 = 256
+    uint8_t *bits = malloc(32); // 8 * 32 = 256
     uint8_t c = 0, start;
-    uint8_t *set = malloc(32);
     if (ARRAY_size(*bdata) && ARRAY_get(uint8_t, bdata, 0) == '^') {
         memset(bits, 255, 32);
         flip_bit = 1;
@@ -109,8 +108,7 @@ static uint8_t *pegvm_make_charset(ARRAY(uint8_t) *bdata)
             start = c;
         }
     }
-    memcpy(set, bits, 32);
-    return set;
+    return bits;
 }
 
 static char *pegvm_dump_charset(uint8_t *bits)
