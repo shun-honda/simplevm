@@ -16,7 +16,6 @@ typedef struct Instruction {
     };
 } PegVMInstruction, Instruction;
 
-int pegvm_unconsume_charset(uint8_t *bits, uint8_t c);
 PegVMInstruction *ByteCodeLoader_Load(InputSource *input);
 void PegVMInstruction_dump(PegVMInstruction *code, size_t len);
 #endif

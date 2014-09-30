@@ -126,19 +126,6 @@ static char *pegvm_dump_charset(uint8_t *bits)
     return charset;
 }
 
-int pegvm_unconsume_charset(uint8_t *bits, uint8_t c)
-{
-    size_t i;
-    for (i = 0; i < 256; i++) {
-        if ((bits[i / 8] & (1 << (i % 8))) == (1 << (i % 8))) {
-            if (i == c) {
-                return 0;
-            }
-        }
-    }
-    return 1;
-}
-
 #include "loader.generated.c"
 
 typedef Instruction *(*inst_load_t)(Instruction *self, uint32_t ndata, ARRAY(uint8_t) *bdata);
