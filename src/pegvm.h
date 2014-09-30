@@ -14,8 +14,8 @@ typedef struct ParserContext {
     NODE *current_node;
     InputSource *current_source;
     PegVMInstruction *instructions;
-    long stack_pointer_base[PARSER_CONTEXT_MAX_STACK_LENGTH];
-    PegVMInstruction *call_stack_pointer_base[PARSER_CONTEXT_MAX_STACK_LENGTH];
+    long *stack_pointer_base;
+    PegVMInstruction **call_stack_pointer_base;
     char last_error[PARSER_CONTEXT_MAX_ERROR_LENGTH];
 } ParserContext;
 

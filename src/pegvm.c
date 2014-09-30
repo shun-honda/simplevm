@@ -16,12 +16,16 @@ static void ParserContext_SetError(ParserContext *context, const char *fmt, ...)
 void ParserContext_Init(ParserContext *context)
 {
     memset(context, 0, sizeof(*context));
+    context->stack_pointer_base = (long *) malloc(sizeof(long) * PARSER_CONTEXT_MAX_STACK_LENGTH);
+    context->call_stack_pointer_base = (PegVMInstruction **) malloc(sizeof(PegVMInstruction *) * PARSER_CONTEXT_MAX_STACK_LENGTH);
     context->stack_pointer = &context->stack_pointer_base[0];
     context->call_stack_pointer = &context->call_stack_pointer_base[0];
 }
 
 void ParserContext_Dispose(ParserContext *context)
 {
+    free(context->stack_pointer_base);
+    free(context->call_stack_pointer_base);
 }
 
 static void ParserContext_SetError(ParserContext *context, const char *fmt, ...)
@@ -43,6 +47,16 @@ int ParserContext_LoadSyntax(ParserContext *context, const char *file)
     return 0;
 }
 
+static PegVMInstruction *ParserContext_PrepareIP(ParserContext *context)
+{
+    PegVMInstruction *insts;
+    // load EXIT
+    insts = context->instructions;
+    PUSH_IP(context, insts - 1);
+    insts += 1; // skip EXIT inst
+    return insts;
+}
+
 int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv)
 {
     int i;
@@ -55,10 +69,7 @@ int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv
             return 1;
         }
 
-        // load EXIT
-        insts = context->instructions;
-        PUSH_IP(context, insts - 1);
-        insts += 1; // skip dummy inst
+        insts = ParserContext_PrepareIP(context);
 
         // push root node
         context->current_node = NODE_New(NODE_TYPE_DEFAULT, is.pos);
