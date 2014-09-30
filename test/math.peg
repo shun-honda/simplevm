@@ -1,0 +1,14 @@
+File
+	= Expr .*
+
+Expr
+	= Sum
+
+Sum
+	= Product {@ ( '+' #Add / '-' #Sub )  @Product }*
+
+Product
+	= Value {@ ( '*' #Mul / '/' #Div / '%' #Mod ) @Value }*
+
+Value
+	= { [0-9]+ #Integer }
