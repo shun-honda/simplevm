@@ -9,6 +9,17 @@ DEF_ARRAY_OP_NOPOINTER(uint8_t);
 DEF_ARRAY_STRUCT(Instruction);
 DEF_ARRAY_T_OP(Instruction);
 
+#ifndef MAX_PATH
+#define MAX_PATH 4096
+#endif
+
+typedef struct ByteCodeInfo {
+    uint32_t version;
+    uint32_t pathlen;
+    uint8_t filepath[MAX_PATH];
+    int64_t bytecode_length;
+} ByteCodeInfo;
+
 static const char *get_opname(uint8_t opcode)
 {
     switch (opcode) {
@@ -61,9 +72,8 @@ static uint8_t *pegvm_make_charset(ARRAY(uint8_t) *bdata)
     size_t pos = 0;
     int flip_bit = 0;
     // FIXME support unicode, hexcode
-    uint8_t bits[32]; // 8 * 32 = 256
+    uint8_t *bits = malloc(32); // 8 * 32 = 256
     uint8_t c = 0, start;
-    uint8_t *set = malloc(32);
     if (ARRAY_size(*bdata) && ARRAY_get(uint8_t, bdata, 0) == '^') {
         memset(bits, 255, 32);
         flip_bit = 1;
@@ -98,8 +108,7 @@ static uint8_t *pegvm_make_charset(ARRAY(uint8_t) *bdata)
             start = c;
         }
     }
-    memcpy(set, bits, 32);
-    return set;
+    return bits;
 }
 
 static char *pegvm_dump_charset(uint8_t *bits)
@@ -113,19 +122,6 @@ static char *pegvm_dump_charset(uint8_t *bits)
         }
     }
     return charset;
-}
-
-int pegvm_unconsume_charset(uint8_t *bits, uint8_t c)
-{
-    size_t i;
-    for (i = 0; i < 256; i++) {
-        if ((bits[i / 8] & (1 << (i % 8))) == (1 << (i % 8))) {
-            if (i == c) {
-                return 0;
-            }
-        }
-    }
-    return 1;
 }
 
 #include "loader.generated.c"
@@ -166,82 +162,74 @@ void PegVMInstruction_dump(PegVMInstruction *code, size_t len)
     }
 }
 
-void ByteCodeInfo_dump(ByteCodeInfo *info)
+static void ByteCodeInfo_dump(ByteCodeInfo *info)
 {
-    fprintf(stderr, "ByteCodeVersion=%ld\n", info->version);
-    fprintf(stderr, "PEGFile=%s\n", info->PegFileName);
-    fprintf(stderr, "LengthOfByteCode=%lld\n", info->bytecode_length);
+    fprintf(stderr, "ByteCodeVersion=%u\n", info->version);
+    fprintf(stderr, "PEGFile=%s\n", info->filepath);
+    fprintf(stderr, "LengthOfByteCode=%llu\n", info->bytecode_length);
     fprintf(stderr, "\n");
+}
+
+static uint32_t read32(InputSource *input)
+{
+    uint32_t value = 0;
+    value = InputSource_GetUint8(input);
+    value = (value) | (InputSource_GetUint8(input) << 8);
+    value = (value) | (InputSource_GetUint8(input) << 16);
+    value = (value) | (InputSource_GetUint8(input) << 24);
+    return value;
+}
+
+static uint64_t read64(InputSource *input)
+{
+    uint64_t value1 = read32(input);
+    uint64_t value2 = read32(input);
+    return value2 << 32 | value1;
 }
 
 PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
 {
     size_t i;
-    int idx = 0;
     Instruction inst, *instp;
-    ByteCodeInfo *info = malloc(sizeof(ByteCodeInfo));
+    ByteCodeInfo info = {};
+    PegVMInstruction *code = NULL;
     ARRAY(uint8_t) buf;
-    ARRAY(Instruction) insts = {};
+    ARRAY(Instruction) insts;
+
     ARRAY_init(uint8_t, &buf, 1);
     ARRAY_init(Instruction, &insts, 1);
 
-    PegVMInstruction *code = NULL;
-    
-    uint8_t version;
-    version = InputSource_GetUint8(input);
-    version = (version) | (InputSource_GetUint8(input) << 8);
-    version = (version) | (InputSource_GetUint8(input) << 16);
-    version = (version) | (InputSource_GetUint8(input) << 24);
-    uint32_t length;
-    length = InputSource_GetUint8(input);
-    length = (length) | (InputSource_GetUint8(input) << 8);
-    length = (length) | (InputSource_GetUint8(input) << 16);
-    length = (length) | (InputSource_GetUint8(input) << 24);
-    uint8_t *filename = malloc(sizeof(uint8_t) * length);
-    for (i = 0; i < length; i++) {
-        filename[i] = InputSource_GetUint8(input);
+    info.version = read32(input);
+    info.pathlen  = read32(input);
+    for (i = 0; i < info.pathlen; i++) {
+        info.filepath[i] = InputSource_GetUint8(input);
     }
-    uint64_t bytecode_length;
-    bytecode_length = InputSource_GetUint8(input);
-    bytecode_length = (bytecode_length) | (InputSource_GetUint8(input) << 8);
-    bytecode_length = (bytecode_length) | (InputSource_GetUint8(input) << 16);
-    bytecode_length = (bytecode_length) | (InputSource_GetUint8(input) << 24);
-    uint64_t in;
-    for (i = 1; i < 5; i++) {
-        in = InputSource_GetUint8(input);
-        bytecode_length = (bytecode_length) | in << (8 * i);
-    }
-    info->version = version;
-    info->PegFileName = filename;
-    info->bytecode_length = bytecode_length;
-    
-    for (i = 0; i < bytecode_length; i++) {
+    info.bytecode_length = read64(input);
+
+    for (i = 0; i < info.bytecode_length; i++) {
+        uint8_t code_length;
         uint8_t opcode = InputSource_GetUint8(input);
         uint8_t bdata = 0;
         uint32_t ndata;
-        ndata = InputSource_GetUint8(input);
-        ndata = (ndata) | (InputSource_GetUint8(input) << 8);
-        ndata = (ndata) | (InputSource_GetUint8(input) << 16);
-        ndata = (ndata) | (InputSource_GetUint8(input) << 24);
+        ndata = read32(input);
         ARRAY_clear(buf);
-        int j = 0;
-        uint8_t code_length = InputSource_GetUint8(input);
-        while (j < code_length) {
+        code_length = InputSource_GetUint8(input);
+        while (code_length--) {
             bdata = InputSource_GetUint8(input);
             ARRAY_add(uint8_t, &buf, bdata);
-            j++;
         }
         inst.opcode = opcode;
         inst.ndata = 0;
         inst.bdata = NULL;
         instp = f_inst[opcode](&inst, ndata, &buf);
         ARRAY_add(Instruction, &insts, instp);
-        idx++;
     }
     code = (PegVMInstruction *) malloc(sizeof(Instruction) * ARRAY_size(insts));
     PegVMInstruction_relocate(code, &insts);
-    ByteCodeInfo_dump(info);
-    // PegVMInstruction_dump(code + 1, ARRAY_size(insts));
+    ByteCodeInfo_dump(&info);
+    if (0) {
+        PegVMInstruction_dump(code + 1, ARRAY_size(insts));
+    }
     ARRAY_dispose(uint8_t, &buf);
     ARRAY_dispose(Instruction, &insts);
     return code;

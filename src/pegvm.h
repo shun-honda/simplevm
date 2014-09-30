@@ -19,7 +19,7 @@ typedef struct ParserContext {
 } ParserContext;
 
 void ParserContext_Init(ParserContext *context);
-void ParserContext_Destruct(ParserContext *context);
+void ParserContext_Dispose(ParserContext *context);
 int ParserContext_LoadSyntax(ParserContext *context, const char *file);
 int ParserContext_Execute(ParserContext *context, PegVMInstruction *inst, InputSource *input);
 int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv);

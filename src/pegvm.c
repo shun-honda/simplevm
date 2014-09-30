@@ -18,7 +18,7 @@ void ParserContext_Init(ParserContext *context)
     context->stack_pointer = context->stack_pointer_base;
 }
 
-void ParserContext_Destruct(ParserContext *context)
+void ParserContext_Dispose(ParserContext *context)
 {
 }
 
@@ -139,8 +139,9 @@ L_head:
             }
             OP_CASE(MatchCharset) {
                 uint8_t c = InputSource_GetUint8(input);
+                uint8_t *charset = inst->bdata;
                 fprintf(stderr, "Charset c='%c'\n", (char)c);
-                if (pegvm_unconsume_charset(inst->bdata, c)) {
+                if ((charset[c / 8] & (1 << (c % 8)))) {
                     ParserContext_RecordFailurePos(context, input);
                 }
                 DISPATCH_NEXT;

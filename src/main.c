@@ -52,6 +52,6 @@ int main(int argc, char * const argv[])
     if (ParserContext_ParseFiles(&context, argc, argv)) {
         pegvm_error(context.last_error);
     }
-    ParserContext_Destruct(&context);
+    ParserContext_Dispose(&context);
     return 0;
 }
