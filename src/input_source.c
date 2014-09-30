@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "input_source.h"
 
 static char *loadFile(const char *filename, size_t *length)
@@ -46,4 +47,12 @@ void InputSource_Dispose(InputSource *is)
         free((void *)is->source);
         is->pos = is->length = 0;
     }
+}
+
+uint8_t *InputSource_CopyText(InputSource *input, size_t pos, size_t length)
+{
+    uint8_t *text = (uint8_t *)malloc(length + 1);
+    memcpy(text, input->source + pos, length);
+    text[length] = '\0';
+    return text;
 }

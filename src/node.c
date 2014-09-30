@@ -8,8 +8,9 @@ DEF_ARRAY_T(NODE);
 
 struct NODE {
     uint8_t *tag;
-    size_t node_pos;
     uint8_t *consume_text;
+    unsigned pos;
+    unsigned length;
     ARRAY(NODE) node_list;
 };
 
@@ -18,7 +19,8 @@ DEF_ARRAY_OP(NODE);
 NODE *NODE_New(unsigned type, size_t pos)
 {
     NODE *self = (NODE *) GC_MALLOC(sizeof(NODE));
-    self->node_pos = pos;
+    self->pos = pos;
+    self->length = 0;
     ARRAY_init(NODE, &self->node_list, 1);
     return self;
 }
@@ -27,8 +29,8 @@ void NODE_SetTag(NODE *self, uint8_t *bdata, InputSource *input)
 {
     self->tag = bdata;
     if (ARRAY_size(self->node_list) == 0) {
-        size_t length = input->pos - self->node_pos;
-        self->consume_text = InputSource_GetText(input, self->node_pos, length);
+        self->length = input->pos - self->pos;
+        self->consume_text = InputSource_CopyText(input, self->pos, self->length);
     }
     // ARRAY_ensureSize(NODE, self->node_list, length);
 }
