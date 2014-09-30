@@ -59,7 +59,7 @@ int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv
         insts += 1; // skip dummy inst
 
         // push root node
-        context->current_node = NODE_New(NODE_TYPE_DEFAULT);
+        context->current_node = NODE_New(NODE_TYPE_DEFAULT, is.pos);
 
         if (ParserContext_Execute(context, insts, &is)) {
             ParserContext_SetError(context,
@@ -263,7 +263,7 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(NewObject) {
-                context->current_node = NODE_New(NODE_TYPE_DEFAULT);
+                context->current_node = NODE_New(NODE_TYPE_DEFAULT, input->pos);
                 DISPATCH_NEXT;
             }
             OP_CASE(LeftJoinObject) {
@@ -279,9 +279,9 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(Tagging) {
-                long length = input->pos - TOP_SP();
-                NODE_SetTag(context->current_node, inst->bdata, length);
-                fprintf(stderr, "tag '%s'\n", inst->bdata);
+                //long length = input->pos - context->current_node.pos_node;
+                NODE_SetTag(context->current_node, inst->bdata, input);
+                fprintf(stderr, "tag '%s'\ntext '%s'\n", inst->bdata, NODE_GetConsumeText(context->current_node));
                 DISPATCH_NEXT;
             }
             OP_CASE(Value) {
