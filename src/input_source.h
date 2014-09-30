@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <assert.h>
 #ifndef INPUT_SOURCE_H
 #define INPUT_SOURCE_H
 
@@ -20,7 +21,8 @@ void InputSource_Dispose(InputSource *is);
 
 static inline uint8_t InputSource_GetUint8(InputSource *input)
 {
-    return ((uint8_t *)input->source)[input->pos++];
+    return (input->pos < input->length) ?
+        ((uint8_t *)input->source)[input->pos++] : -1;
 }
 
 static inline uint8_t *InputSource_GetText(InputSource *input, size_t pos, size_t length)
@@ -34,7 +36,9 @@ static inline uint8_t *InputSource_GetText(InputSource *input, size_t pos, size_
 
 static inline uint32_t InputSource_GetUint32(InputSource *input)
 {
-    uint32_t data = ((uint32_t *)input->source)[input->pos];
+    uint32_t data;
+    assert(input->pos < input->length);
+    data = ((uint32_t *)input->source)[input->pos];
     input->pos += sizeof(uint32_t) / sizeof(uint8_t);
     return data;
 }
