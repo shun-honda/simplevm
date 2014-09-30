@@ -18,7 +18,7 @@ void ParserContext_Init(ParserContext *context)
     context->stack_pointer = context->stack_pointer_base;
 }
 
-void ParserContext_Destruct(ParserContext *context)
+void ParserContext_Dispose(ParserContext *context)
 {
 }
 
