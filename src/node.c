@@ -65,6 +65,9 @@ void NODE_dump(NODE *node, int level)
             FOR_EACH_ARRAY(node->node_list, x, e) {
                 NODE_dump(x, level + 1);
             }
+            for (i = 0; i < level; i++) {
+                fprintf(stderr, "  ");
+            }
         }
         fprintf(stderr, "}\n");
     }
