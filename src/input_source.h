@@ -3,6 +3,7 @@
 //  pegVM
 //
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #ifndef INPUT_SOURCE_H
 #define INPUT_SOURCE_H
@@ -22,9 +23,9 @@ static inline uint8_t InputSource_GetUint8(InputSource *input)
     return ((uint8_t *)input->source)[input->pos++];
 }
 
-static inline uint8_t *InputSource_GetText(InputSource *input, size_t pos, int length)
+static inline uint8_t *InputSource_GetText(InputSource *input, size_t pos, size_t length)
 {
-    uint8_t *text = malloc(sizeof(char) * length);
+    uint8_t *text = (uint8_t *)malloc(length);
     for (int i = 0; i < length; i++) {
         text[i] = ((uint8_t *)input->source)[pos++];
     }
