@@ -189,6 +189,7 @@ L_head:
                 fprintf(stderr, "T c='%c', n='%c'\n", (char)c, (char)inst->ndata);
                 if (c != (uint8_t)inst->ndata) {
                     ParserContext_RecordFailurePos(context, input);
+                    input->pos--;
                 }
                 DISPATCH_NEXT;
             }
@@ -202,6 +203,7 @@ L_head:
                 fprintf(stderr, "Charset c='%c'\n", (char)c);
                 if (!(charset[c / 8] & (1 << (c % 8)))) {
                     ParserContext_RecordFailurePos(context, input);
+                    input->pos--;
                 }
                 DISPATCH_NEXT;
             }
@@ -210,6 +212,7 @@ L_head:
                 fprintf(stderr, "A c='%c'\n", (char)c);
                 if (c == (uint8_t)-1) {
                     // FIXME support unicode
+                    input->pos--;
                     ParserContext_RecordFailurePos(context, input);
                 }
                 DISPATCH_NEXT;
