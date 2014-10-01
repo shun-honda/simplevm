@@ -47,7 +47,6 @@ int main(int argc, char const *argv[])
     children2 = Node_GetChildren(children[1], &len2);
     assert(children1 && len1 == 2);
     assert(children2 && len2 == 2);
-    NODE_dump(children[0], 0);
     assert(NODE_EqualTag(children[0], "Add"));
     assert(NODE_EqualTag(children[1], "Mul"));
     assert(NODE_EqualText(children1[0], "1"));
