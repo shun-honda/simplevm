@@ -224,7 +224,7 @@ PegVMInstruction *ByteCodeLoader_Load(InputSource *input)
         instp = f_inst[opcode](&inst, ndata, &buf);
         ARRAY_add(Instruction, &insts, instp);
     }
-    code = (PegVMInstruction *) malloc(sizeof(Instruction) * ARRAY_size(insts));
+    code = (PegVMInstruction *) GC_MALLOC(sizeof(Instruction) * ARRAY_size(insts));
     PegVMInstruction_relocate(code, &insts);
     ByteCodeInfo_dump(&info);
     if (0) {

@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <stdbool.h>
-#include <stdlib.h>
+#include <gc/gc.h>
 #include <assert.h>
 #include <string.h> /* for memmove */
 
@@ -55,7 +55,7 @@ typedef struct ARRAY(T) ARRAY(T)
 
 #define DEF_ARRAY_OP__(T, ValueType)\
 static inline ARRAY(T) *ARRAY_init_##T (ARRAY(T) *a, size_t initsize) {\
-    a->list = (initsize) ? (T *) malloc(sizeof(T)*initsize) : 0;\
+    a->list = (initsize) ? (T *) GC_MALLOC(sizeof(T)*initsize) : 0;\
     a->capacity  = initsize;\
     a->size  = 0;\
     return (a);\
@@ -67,10 +67,9 @@ static inline void ARRAY_##T##_ensureSize(ARRAY(T) *a, size_t size) {\
     while(a->size + size > a->capacity) {\
         a->capacity = 1 << LOG2(a->capacity * 2 + 1);\
     }\
-    a->list = (T *)realloc(a->list, sizeof(T) * a->capacity);\
+    a->list = (T *)GC_REALLOC(a->list, sizeof(T) * a->capacity);\
 }\
 static inline void ARRAY_##T##_dispose(ARRAY(T) *a) {\
-    free(a->list);\
     a->size     = 0;\
     a->capacity = 0;\
     a->list     = 0;\

@@ -60,7 +60,6 @@ void NODE_Dispose(NODE *self)
 {
     ARRAY_dispose(NODEPtr, &self->node_list);
     if (self->text) {
-        free(self->text);
         self->text = NULL;
     }
 }
