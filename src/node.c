@@ -22,7 +22,7 @@ NODE *NODE_New(unsigned type, size_t pos)
     NODE *self = (NODE *) GC_MALLOC(sizeof(NODE));
     self->pos = pos;
     self->length = 0;
-    ARRAY_init(NODEPtr, &self->node_list, 1);
+    ARRAY_init(NODEPtr, &self->node_list, 0);
     return self;
 }
 
