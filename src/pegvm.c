@@ -5,6 +5,7 @@
 
 #include "pegvm.h"
 #include "input_source.h"
+#include <gc/gc.h>
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
@@ -18,16 +19,14 @@ static void ParserContext_SetError(ParserContext *context, const char *fmt, ...)
 void ParserContext_Init(ParserContext *context)
 {
     memset(context, 0, sizeof(*context));
-    context->stack_pointer_base = (long *) malloc(sizeof(long) * PARSER_CONTEXT_MAX_STACK_LENGTH);
-    context->call_stack_pointer_base = (PegVMInstruction **) malloc(sizeof(PegVMInstruction *) * PARSER_CONTEXT_MAX_STACK_LENGTH);
+    context->stack_pointer_base = (long *) GC_MALLOC(sizeof(long) * PARSER_CONTEXT_MAX_STACK_LENGTH);
+    context->call_stack_pointer_base = (PegVMInstruction **) GC_MALLOC(sizeof(PegVMInstruction *) * PARSER_CONTEXT_MAX_STACK_LENGTH);
     context->stack_pointer = &context->stack_pointer_base[0];
     context->call_stack_pointer = &context->call_stack_pointer_base[0];
 }
 
 void ParserContext_Dispose(ParserContext *context)
 {
-    free(context->stack_pointer_base);
-    free(context->call_stack_pointer_base);
 }
 
 static void ParserContext_SetError(ParserContext *context, const char *fmt, ...)
