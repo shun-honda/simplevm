@@ -31,7 +31,9 @@ static void NODE_finalizer(void *obj, void *client_data)
     if (node->text) {
         node->text = NULL;
     }
+#if NODE_DEBUG
     node->id = UINT64_MAX;
+#endif
 }
 
 NODE *NODE_New(unsigned type, size_t pos)
