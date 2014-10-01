@@ -57,11 +57,12 @@ static PegVMInstruction *ParserContext_PrepareIP(ParserContext *context)
     return insts;
 }
 
-int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv)
+int ParserContext_ParseFiles(ParserContext *context, int argc, char **argv)
 {
     int i;
     InputSource is;
     PegVMInstruction *insts;
+    assert(context->instructions && "load syntax file before parsing file");
     for (i = 0; i < argc; i++) {
         if (InputSource_Init(&is, argv[i]) == NULL) {
             ParserContext_SetError(context,

@@ -49,7 +49,7 @@ int main(int argc, char * const argv[])
     if (ParserContext_LoadSyntax(&context, syntax_file)) {
         pegvm_error("invalid bytecode");
     }
-    if (ParserContext_ParseFiles(&context, argc, argv)) {
+    if (ParserContext_ParseFiles(&context, argc, (char **)argv)) {
         pegvm_error(context.last_error);
     }
     ParserContext_Dispose(&context);
