@@ -8,6 +8,8 @@
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
+
+#define DUMP_PARSED_NODE 1
 static inline void PUSH_IP(ParserContext *context, PegVMInstruction *ip);
 
 static void ParserContext_SetError(ParserContext *context, const char *fmt, ...)
@@ -72,7 +74,7 @@ int ParserContext_ParseFiles(ParserContext *context, int argc, char **argv)
 
         insts = ParserContext_PrepareIP(context);
 
-        // push root node
+        // create root node
         context->current_node = NODE_New(NODE_TYPE_DEFAULT, is.pos);
 
         if (ParserContext_Execute(context, insts, &is)) {
@@ -81,9 +83,11 @@ int ParserContext_ParseFiles(ParserContext *context, int argc, char **argv)
             InputSource_Dispose(&is);
             return 1;
         }
-        fprintf(stderr, "\nparsed:\n\n");
-        NODE_Dump(context->current_node, 0);
-        fprintf(stderr, "\n");
+        if (DUMP_PARSED_NODE) {
+            fprintf(stderr, "\nparsed:\n\n");
+            NODE_Dump(context->current_node, 0);
+            fprintf(stderr, "\n");
+        }
         InputSource_Dispose(&is);
     }
     return 0;
@@ -337,7 +341,6 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(Tagging) {
-                //long length = input->pos - context->current_node.pos_node;
                 NODE_SetTag(context->current_node, inst->bdata, input);
                 fprintf(stderr, "tag '%s'\ntext '%s'\n", inst->bdata, NODE_GetText(context->current_node));
                 DISPATCH_NEXT;

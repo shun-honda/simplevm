@@ -33,7 +33,6 @@ void NODE_SetTag(NODE *self, uint8_t *bdata, InputSource *input)
         self->length = input->pos - self->pos;
         self->text = InputSource_CopyText(input, self->pos, self->length);
     }
-    // ARRAY_ensureSize(NODE, self->node_list, length);
 }
 
 void NODE_AppendChild(NODE *parent, NODE *node)
