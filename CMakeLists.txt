@@ -103,6 +103,7 @@ target_link_libraries(pegvm_bin pegvm)
 set_target_properties(pegvm_bin PROPERTIES OUTPUT_NAME pegvm)
 
 enable_testing()
+set(PEGVM_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test)
 add_executable(test_input_source test/test_input_source.c)
 target_link_libraries(test_input_source pegvm)
 add_test(test_input_source test_input_source)
@@ -111,6 +112,9 @@ add_executable(test_load_bytecode test/test_load_bytecode.c)
 target_link_libraries(test_load_bytecode pegvm)
 add_test(test_load_bytecode test_load_bytecode)
 
+add_executable(test_math test/test_math.c)
+target_link_libraries(test_math pegvm)
+add_test(test_math test_math ${PEGVM_TEST_DIR}/math.bin ${PEGVM_TEST_DIR}/math.txt)
 
 install(TARGETS pegvm pegvm_bin
 		RUNTIME DESTINATION bin

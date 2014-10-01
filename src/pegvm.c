@@ -8,6 +8,8 @@
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
+
+#define DUMP_PARSED_NODE 1
 static inline void PUSH_IP(ParserContext *context, PegVMInstruction *ip);
 
 static void ParserContext_SetError(ParserContext *context, const char *fmt, ...)
@@ -16,12 +18,16 @@ static void ParserContext_SetError(ParserContext *context, const char *fmt, ...)
 void ParserContext_Init(ParserContext *context)
 {
     memset(context, 0, sizeof(*context));
+    context->stack_pointer_base = (long *) malloc(sizeof(long) * PARSER_CONTEXT_MAX_STACK_LENGTH);
+    context->call_stack_pointer_base = (PegVMInstruction **) malloc(sizeof(PegVMInstruction *) * PARSER_CONTEXT_MAX_STACK_LENGTH);
     context->stack_pointer = &context->stack_pointer_base[0];
     context->call_stack_pointer = &context->call_stack_pointer_base[0];
 }
 
 void ParserContext_Dispose(ParserContext *context)
 {
+    free(context->stack_pointer_base);
+    free(context->call_stack_pointer_base);
 }
 
 static void ParserContext_SetError(ParserContext *context, const char *fmt, ...)
@@ -43,11 +49,22 @@ int ParserContext_LoadSyntax(ParserContext *context, const char *file)
     return 0;
 }
 
-int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv)
+static PegVMInstruction *ParserContext_PrepareIP(ParserContext *context)
+{
+    PegVMInstruction *insts;
+    // load EXIT
+    insts = context->instructions;
+    PUSH_IP(context, insts - 1);
+    insts += 1; // skip EXIT inst
+    return insts;
+}
+
+int ParserContext_ParseFiles(ParserContext *context, int argc, char **argv)
 {
     int i;
     InputSource is;
     PegVMInstruction *insts;
+    assert(context->instructions && "load syntax file before parsing file");
     for (i = 0; i < argc; i++) {
         if (InputSource_Init(&is, argv[i]) == NULL) {
             ParserContext_SetError(context,
@@ -55,12 +72,9 @@ int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv
             return 1;
         }
 
-        // load EXIT
-        insts = context->instructions;
-        PUSH_IP(context, insts - 1);
-        insts += 1; // skip dummy inst
+        insts = ParserContext_PrepareIP(context);
 
-        // push root node
+        // create root node
         context->current_node = NODE_New(NODE_TYPE_DEFAULT, is.pos);
 
         if (ParserContext_Execute(context, insts, &is)) {
@@ -69,9 +83,11 @@ int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv
             InputSource_Dispose(&is);
             return 1;
         }
-        fprintf(stderr, "\nparsed:\n\n");
-        NODE_dump(context->current_node, 0);
-        fprintf(stderr, "\n");
+        if (DUMP_PARSED_NODE) {
+            fprintf(stderr, "\nparsed:\n\n");
+            NODE_Dump(context->current_node, 0);
+            fprintf(stderr, "\n");
+        }
         InputSource_Dispose(&is);
     }
     return 0;
@@ -325,7 +341,6 @@ L_head:
                 DISPATCH_NEXT;
             }
             OP_CASE(Tagging) {
-                //long length = input->pos - context->current_node.pos_node;
                 NODE_SetTag(context->current_node, inst->bdata, input);
                 fprintf(stderr, "tag '%s'\ntext '%s'\n", inst->bdata, NODE_GetText(context->current_node));
                 DISPATCH_NEXT;

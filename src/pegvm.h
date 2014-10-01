@@ -1,6 +1,7 @@
 #include "input_source.h"
 #include "loader.h"
 #include "node.h"
+#include <gc/gc.h>
 
 #ifndef PEGVM_H
 #define PEGVM_H
@@ -14,8 +15,8 @@ typedef struct ParserContext {
     NODE *current_node;
     InputSource *current_source;
     PegVMInstruction *instructions;
-    long stack_pointer_base[PARSER_CONTEXT_MAX_STACK_LENGTH];
-    PegVMInstruction *call_stack_pointer_base[PARSER_CONTEXT_MAX_STACK_LENGTH];
+    long *stack_pointer_base;
+    PegVMInstruction **call_stack_pointer_base;
     char last_error[PARSER_CONTEXT_MAX_ERROR_LENGTH];
 } ParserContext;
 
@@ -23,7 +24,7 @@ void ParserContext_Init(ParserContext *context);
 void ParserContext_Dispose(ParserContext *context);
 int ParserContext_LoadSyntax(ParserContext *context, const char *file);
 int ParserContext_Execute(ParserContext *context, PegVMInstruction *inst, InputSource *input);
-int ParserContext_ParseFiles(ParserContext *context, int argc, char *const *argv);
+int ParserContext_ParseFiles(ParserContext *context, int argc, char **argv);
 
 #define PEGVM_OP_EACH(OP)\
         OP(EXIT)\
