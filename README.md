@@ -6,7 +6,15 @@ PegVM is ...
 
 ## Requirement
 Need to install [Boehm-Demers-Weiser GC](http://www.hboehm.info/gc/)
-If you are OSX user and use homebrew, just type `brew install boehmgc`
+### OSX
+```
+brew install bohemgc cmake
+```
+### Ubuntu
+```
+sudo apt-get install cmake libgc-dev
+```
+
 
 ## Build
 You'll have to make a few steps. Type in:
