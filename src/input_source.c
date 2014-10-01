@@ -19,7 +19,7 @@ static char *loadFile(const char *filename, size_t *length)
     fseek(fp, 0, SEEK_END);
     len = (size_t)ftell(fp);
     fseek(fp, 0, SEEK_SET);
-    source = (char *)GC_MALLOC(len + 1);
+    source = (char *)malloc(len + 1);
     if (len != fread(source, 1, len, fp)) {
         fprintf(stderr, "fread error\n");
         exit(EXIT_FAILURE);
@@ -44,7 +44,9 @@ InputSource *InputSource_Init(InputSource *is, const char *filename)
 void InputSource_Dispose(InputSource *is)
 {
     if (is->source) {
+        free((char *)is->source);
         is->pos = is->length = 0;
+        is->source = NULL;
     }
 }
 

@@ -1,4 +1,7 @@
 #include "node.h"
+#define KARRAY_MALLOC(N)        GC_MALLOC(N)
+#define KARRAY_REALLOC(PTR, N)  GC_REALLOC(PTR, N)
+#define KARRAY_FREE(PTR)        ((void)PTR)
 #include "karray.h"
 #include <gc/gc.h>
 #include <stdio.h>
@@ -6,8 +9,12 @@
 typedef struct NODE *NODEPtr;
 DEF_ARRAY_STRUCT0(NODEPtr, uintptr_t);
 DEF_ARRAY_T(NODEPtr);
+#define NODE_DEBUG 0
 
 struct NODE {
+#if NODE_DEBUG
+    uint64_t id;
+#endif
     uint8_t *tag;
     uint8_t *text;
     unsigned pos;
@@ -17,9 +24,28 @@ struct NODE {
 
 DEF_ARRAY_OP_NOPOINTER(NODEPtr);
 
+static void NODE_finalizer(void *obj, void *client_data)
+{
+    NODE *node = (NODE *)obj;
+    ARRAY_dispose(NODEPtr, &node->node_list);
+    if (node->text) {
+        node->text = NULL;
+    }
+#if NODE_DEBUG
+    node->id = UINT64_MAX;
+#endif
+}
+
 NODE *NODE_New(unsigned type, size_t pos)
 {
+#if NODE_DEBUG
+    static uint64_t node_id = 0;
+#endif
     NODE *self = (NODE *) GC_MALLOC(sizeof(NODE));
+    GC_REGISTER_FINALIZER_NO_ORDER(self, NODE_finalizer, NULL, NULL, NULL);
+#if NODE_DEBUG
+    self->id = node_id++;
+#endif
     self->pos = pos;
     self->length = 0;
     ARRAY_init(NODEPtr, &self->node_list, 0);
@@ -58,10 +84,7 @@ uint8_t *NODE_GetText(NODE *self)
 
 void NODE_Dispose(NODE *self)
 {
-    ARRAY_dispose(NODEPtr, &self->node_list);
-    if (self->text) {
-        self->text = NULL;
-    }
+    NODE_finalizer(self, NULL);
 }
 
 void NODE_Dump(NODE *node, int level)
