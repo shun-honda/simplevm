@@ -34,6 +34,26 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/*
+ * karray uses malloc/realloc/free to allocate memory by default.
+ * If you want to customize memory allocator of karray, define the
+ * macros listed below.
+ * #define KARRAY_MALLOC(N)        my_malloc(N)
+ * #define KARRAY_REALLOC(PTR, N)  my_realloc(PTR, N)
+ * #define KARRAY_FREE(PTR)        my_free(PTR)
+ */
+
+#ifndef KARRAY_MALLOC
+#define KARRAY_MALLOC(N)  malloc(N)
+#endif
+
+#ifndef KARRAY_REALLOC
+#define KARRAY_REALLOC(PTR, N) realloc(PTR, N)
+#endif
+
+#ifndef KARRAY_FREE
+#define KARRAY_FREE(PTR) free(PTR)
+#endif
 
 #ifndef LOG2
 #define LOG2(N) ((unsigned)((sizeof(void *) * 8) - __builtin_clzl(N - 1)))
@@ -55,7 +75,7 @@ typedef struct ARRAY(T) ARRAY(T)
 
 #define DEF_ARRAY_OP__(T, ValueType)\
 static inline ARRAY(T) *ARRAY_init_##T (ARRAY(T) *a, size_t initsize) {\
-    a->list = (initsize) ? (T *) GC_MALLOC(sizeof(T)*initsize) : 0;\
+    a->list = (initsize) ? (T *) KARRAY_MALLOC(sizeof(T)*initsize) : NULL;\
     a->capacity  = initsize;\
     a->size  = 0;\
     return (a);\
@@ -67,9 +87,10 @@ static inline void ARRAY_##T##_ensureSize(ARRAY(T) *a, size_t size) {\
     while(a->size + size > a->capacity) {\
         a->capacity = 1 << LOG2(a->capacity * 2 + 1);\
     }\
-    a->list = (T *)GC_REALLOC(a->list, sizeof(T) * a->capacity);\
+    a->list = (T *)KARRAY_REALLOC(a->list, sizeof(T) * a->capacity);\
 }\
 static inline void ARRAY_##T##_dispose(ARRAY(T) *a) {\
+    KARRAY_FREE(a->list);\
     a->size     = 0;\
     a->capacity = 0;\
     a->list     = 0;\
