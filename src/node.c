@@ -48,7 +48,7 @@ NODE *NODE_New(unsigned type, size_t pos)
 #endif
     self->pos = pos;
     self->length = 0;
-    ARRAY_init(NODEPtr, &self->node_list, 1);
+    ARRAY_init(NODEPtr, &self->node_list, 0);
     return self;
 }
 
