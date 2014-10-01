@@ -82,7 +82,7 @@ int ParserContext_ParseFiles(ParserContext *context, int argc, char **argv)
             return 1;
         }
         fprintf(stderr, "\nparsed:\n\n");
-        NODE_dump(context->current_node, 0);
+        NODE_Dump(context->current_node, 0);
         fprintf(stderr, "\n");
         InputSource_Dispose(&is);
     }
