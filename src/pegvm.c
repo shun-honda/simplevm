@@ -10,7 +10,8 @@
 #include <stdarg.h>
 #include <assert.h>
 
-#define DUMP_PARSED_NODE 1
+#define DUMP_PARSED_NODE 0
+#define PEGVM_DEBUG 0
 static inline void PUSH_IP(ParserContext *context, PegVMInstruction *ip);
 
 static void ParserContext_SetError(ParserContext *context, const char *fmt, ...)
@@ -82,7 +83,7 @@ int ParserContext_ParseFiles(ParserContext *context, int argc, char **argv)
             InputSource_Dispose(&is);
             return 1;
         }
-        if (DUMP_PARSED_NODE) {
+        if (PEGVM_DEBUG || DUMP_PARSED_NODE) {
             fprintf(stderr, "\nparsed:\n\n");
             NODE_Dump(context->current_node, 0);
             fprintf(stderr, "\n");
@@ -149,7 +150,7 @@ int ParserContext_Execute(ParserContext *context, Instruction *inst, InputSource
 L_head:
         switch (inst->opcode) {
 
-#define OP_CASE(OP) case PEGVM_OP_##OP: PegVMInstruction_dump(inst, 1); //asm volatile("int3");
+#define OP_CASE(OP) case PEGVM_OP_##OP: if (PEGVM_DEBUG) { PegVMInstruction_dump(inst, 1); } else {}
 #define DISPATCH_NEXT ++inst; break
             OP_CASE(EXIT) {
                 return 0;
@@ -186,7 +187,9 @@ L_head:
             }
             OP_CASE(MatchText) {
                 uint8_t c = InputSource_GetUint8(input);
-                fprintf(stderr, "T c='%c', n='%c'\n", (char)c, (char)inst->ndata);
+                if (PEGVM_DEBUG) {
+                    fprintf(stderr, "T c='%c', n='%c'\n", (char)c, (char)inst->ndata);
+                }
                 if (c != (uint8_t)inst->ndata) {
                     ParserContext_RecordFailurePos(context, input, 1);
                 }
@@ -199,7 +202,9 @@ L_head:
             OP_CASE(MatchCharset) {
                 uint8_t c = InputSource_GetUint8(input);
                 uint8_t *charset = inst->bdata;
-                fprintf(stderr, "Charset c='%c'\n", (char)c);
+                if (PEGVM_DEBUG) {
+                    fprintf(stderr, "Charset c='%c'\n", (char)c);
+                }
                 if (!(charset[c / 8] & (1 << (c % 8)))) {
                     ParserContext_RecordFailurePos(context, input, 1);
                 }
@@ -207,7 +212,9 @@ L_head:
             }
             OP_CASE(MatchAnyChar) {
                 uint8_t c = InputSource_GetUint8(input);
-                fprintf(stderr, "A c='%c'\n", (char)c);
+                if (PEGVM_DEBUG) {
+                    fprintf(stderr, "A c='%c'\n", (char)c);
+                }
                 if (c == (uint8_t)-1) {
                     // FIXME support unicode
                     ParserContext_RecordFailurePos(context, input, 1);
@@ -343,7 +350,9 @@ L_head:
             }
             OP_CASE(Tagging) {
                 NODE_SetTag(context->current_node, inst->bdata, input);
-                fprintf(stderr, "tag '%s'\ntext '%s'\n", inst->bdata, NODE_GetText(context->current_node));
+                if (PEGVM_DEBUG) {
+                    fprintf(stderr, "tag '%s'\ntext '%s'\n", inst->bdata, NODE_GetText(context->current_node));
+                }
                 DISPATCH_NEXT;
             }
             OP_CASE(Value) {
