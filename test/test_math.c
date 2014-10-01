@@ -31,7 +31,6 @@ int main(int argc, char const *argv[])
             "wrong usage. usage: ARGV[0] /path/to/math.bin /path/to/math.txt");
     GC_INIT();
     ParserContext_Init(&context);
-    ParserContext_Dispose(&context);
 
     assert(ParserContext_LoadSyntax(&context, argv[1]) == 0);
     assert(ParserContext_ParseFiles(&context, 1, (char **)&argv[2]) == 0);
@@ -53,5 +52,6 @@ int main(int argc, char const *argv[])
     assert(NODE_EqualText(children1[1], "2"));
     assert(NODE_EqualText(children2[0], "3"));
     assert(NODE_EqualText(children2[1], "4"));
+    ParserContext_Dispose(&context);
     return 0;
 }
