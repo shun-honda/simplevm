@@ -99,10 +99,11 @@ static inline int ParserContext_IsFailure(ParserContext *context)
 }
 
 #define MAX(A, B) ((A)>(B)?(A):(B))
-static inline void ParserContext_RecordFailurePos(ParserContext *context, InputSource *input)
+static inline void ParserContext_RecordFailurePos(ParserContext *context, InputSource *input, size_t consumed)
 {
     context->failure_pos = MAX(input->pos, context->failure_pos);
     context->current_node = NULL;
+    input->pos -= consumed;
 }
 
 // #define INC_SP(N) (context->stack_pointer += (N))
@@ -188,7 +189,7 @@ L_head:
                 uint8_t c = InputSource_GetUint8(input);
                 fprintf(stderr, "T c='%c', n='%c'\n", (char)c, (char)inst->ndata);
                 if (c != (uint8_t)inst->ndata) {
-                    ParserContext_RecordFailurePos(context, input);
+                    ParserContext_RecordFailurePos(context, input, 1);
                 }
                 DISPATCH_NEXT;
             }
@@ -201,7 +202,7 @@ L_head:
                 uint8_t *charset = inst->bdata;
                 fprintf(stderr, "Charset c='%c'\n", (char)c);
                 if (!(charset[c / 8] & (1 << (c % 8)))) {
-                    ParserContext_RecordFailurePos(context, input);
+                    ParserContext_RecordFailurePos(context, input, 1);
                 }
                 DISPATCH_NEXT;
             }
@@ -210,7 +211,7 @@ L_head:
                 fprintf(stderr, "A c='%c'\n", (char)c);
                 if (c == (uint8_t)-1) {
                     // FIXME support unicode
-                    ParserContext_RecordFailurePos(context, input);
+                    ParserContext_RecordFailurePos(context, input, 1);
                 }
                 DISPATCH_NEXT;
             }
@@ -304,7 +305,8 @@ L_head:
                     context->current_node = node;
                 }
                 else {
-                    ParserContext_RecordFailurePos(context, input);
+                    //XXX(imasahiro) Is it ok to set the consumed length to 0?
+                    ParserContext_RecordFailurePos(context, input, 0);
                 }
                 DISPATCH_NEXT;
             }
