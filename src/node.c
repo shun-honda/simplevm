@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 typedef struct NODE *NODEPtr;
-DEF_ARRAY_STRUCT0(NODEPtr, unsigned short);
+DEF_ARRAY_STRUCT0(NODEPtr, uintptr_t);
 DEF_ARRAY_T(NODEPtr);
 
 struct NODE {
