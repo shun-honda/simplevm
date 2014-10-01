@@ -1,5 +1,8 @@
 #include "loader.h"
 #include "pegvm.h"
+#define KARRAY_MALLOC(N)        GC_MALLOC(N)
+#define KARRAY_REALLOC(PTR, N)  GC_REALLOC(PTR, N)
+#define KARRAY_FREE(PTR)        ((void)PTR)
 #include "karray.h"
 #include <assert.h>
 
